@@ -5,10 +5,6 @@ require("./dbconfigration");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-
-
-const logger = require("./utils/Logger");
-
 const corsOptions = {
   origin: "*", // Allowed origins
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -17,18 +13,25 @@ const corsOptions = {
   optionsSuccessStatus: 200, // for legacy browsers
 }
 
+const logger = require("./utils/Logger");
+
+const UserRoute = require("./route/userRoutes")
+
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '2000mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/user", UserRoute);
+
 
 const PORT = process.env.REACT_APP_SERVER_DOMIN;
 
 app.get("/", (req, res) => {
   res.json({
-    msg: 'Okay',
+    msg: 'Hello World',
     status: 200,
   });
 });
 
-app.listen(PORT, () => 
-  logger.http("Server is running at port : " + PORT));
+const server = app.listen(PORT, () => console.log("Server is running at port : " + PORT));
+server.timeout = 360000; // 6 minutes
