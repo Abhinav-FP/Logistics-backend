@@ -3,7 +3,7 @@
       {
         "name": "admin",
         "permissions": [
-          "create_record",
+          "create_user",
           "read_record",
           "update_record",
           "delete_record"

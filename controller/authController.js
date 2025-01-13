@@ -10,13 +10,13 @@ const jwt = require('jsonwebtoken');
 exports.signup = catchAsync(async (req, res) => {
     try {
       const {
-        username,
+        email,
         password,
         role,
       } = req.body;
   
       // Check if required fields are provided
-      if ( !username, !password, !role ) {
+      if ( !email, !password, !role ) {
         return res.status(401).json({
           status: false,
           message: 'All fields are required',
@@ -26,7 +26,7 @@ exports.signup = catchAsync(async (req, res) => {
   
       // Create new user record
       const record = new User({
-          username,
+          email,
           password,
           role,
       });
@@ -44,16 +44,16 @@ exports.signup = catchAsync(async (req, res) => {
 
 exports.login = catchAsync(async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { email, password } = req.body;
   
-      if (!username || !password) {
+      if (!email || !password) {
         return res.status(401).json({
           status: false,
           message: 'Username and password are required',
         });
       }
   
-      const user = await User.findOne({ username });
+      const user = await User.findOne({ email });
       if (!user) {
         return res.status(404).json({
           status: false,
