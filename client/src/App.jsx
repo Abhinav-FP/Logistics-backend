@@ -1,4 +1,4 @@
-import { Children, useContext, useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import './App.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { authContext } from './context/AuthContext';
@@ -8,9 +8,6 @@ import { Dashboard, Layout, Login, Profile, Settings, Error } from './pages/Dash
 function App() {
 
   const { authUser } = useContext(authContext);
-  useEffect(() => {
-    console.log('authUser: ', authUser);
-  })
 
   const router = createBrowserRouter([
     {
