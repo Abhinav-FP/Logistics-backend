@@ -1,14 +1,21 @@
 
-const successResponse = (res, message, statusCode = 200) => {
-  return res.status(statusCode).json({
+const successResponse = (res, message, statusCode = 200, data = null) => {
+  const response = {
     status: "success",
-    message: message,
-  });
+    message,
+  };
+
+  if (data !== null) {
+    response.data = data;
+  }
+
+  return res.status(statusCode).json(response);
 };
 
-const errorResponse = (res, message = "Something went wrong", statusCode = 500) => {
+
+const errorResponse = (res, message = "Something went wrong", statusCode = 500, status="error") => {
   return res.status(statusCode).json({
-    status: "error",
+    status: status,
     message,
   });
 };

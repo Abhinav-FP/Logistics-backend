@@ -10,17 +10,31 @@
         ]
       },
       {
-        "name": "manager",
+        "name": "shipper",
         "permissions": [
+          "create_user",
           "create_record",
           "read_record",
           "update_record"
         ]
       },
       {
-        "name": "employee",
+        "name": "broker",
         "permissions": [
-          "create_record",
+          "create_user",
+          "read_record"
+        ]
+      },
+      {
+        "name": "carrier",
+        "permissions": [
+          "create_user",
+          "read_record"
+        ]
+      },
+      {
+        "name": "driver",
+        "permissions": [
           "read_record"
         ]
       }
