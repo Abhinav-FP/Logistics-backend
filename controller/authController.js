@@ -1,7 +1,7 @@
 const User = require("../model/user");
 const generator = require("generate-password");
 const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 const {validationErrorResponse,errorResponse,  successResponse} = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 
@@ -14,14 +14,13 @@ exports.signup = catchAsync(async (req, res) => {
       return errorResponse(res, "All fields are required", 401, "false");
     }
 
-    const userUUID = uuidv4();
 
     // Create new user record
     const record = new User({
-      uuid:userUUID,
       email,
       password,
       role,
+      created_by:null,
     });
 
     const result = await record.save();
@@ -93,11 +92,12 @@ exports.createAccount = catchAsync(async (req, res) => {
       numbers: true,
     });
 
-    // const existingUser = await User.find({ $or: [{ email }, { phone_number }] });
+    
     const record = new User({
       email,
       password,
       role,
+      created_by: req.user.id,
     });
 
     const result = await record.save();
@@ -108,9 +108,9 @@ exports.createAccount = catchAsync(async (req, res) => {
     }
   } catch (error) {
     if (error.code === 11000) {
-      errorResponse(res, "Email already exists.", 400);
+     return errorResponse(res, "Email already exists.", 400);
     }
-    return errorResponse(res, error.message || "Internal Server Error", 500);
+    errorResponse(res, error.message || "Internal Server Error", 500);
   }
 });
 
@@ -126,14 +126,6 @@ exports.getUsers = catchAsync(async (req, res) => {
       return errorResponse(res, "No users found", 404);
     }
     return successResponse(res, "Users fetched successfully", 200, users);
-  } catch (error) {
-    return errorResponse(res, error.message || "Internal Server Error", 500);
-  }
-});
-
-exports.check = catchAsync(async (req, res) => {
-  try {
-    successResponse(res, "Successfully hit the route!", 201);
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }

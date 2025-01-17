@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  uuid: {
-    type: String,
-    required: [true, "UUID is required"],
-  },
   email: {
     type: String,
     required: [true, "Email is required"],
@@ -15,7 +11,11 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    required: [true, "Role is requireddfd"],
+    required: [true, "Role is required"],
+  },
+  created_by: { 
+    type: String,
+    default: null,
   },
 });
 

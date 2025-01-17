@@ -13,7 +13,7 @@ const corsOptions = {
   optionsSuccessStatus: 200, // for legacy browsers
 }
 
-const logger = require("./utils/Logger");
+// const logger = require("./utils/Logger");
 
 const UserRoute = require("./route/userRoutes")
 
