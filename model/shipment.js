@@ -51,6 +51,38 @@ const shipmentSchema = new mongoose.Schema({
     ref: 'User',
     default: null,
   },
+  shippingDate: {
+    type: String,
+    required: [true, "Shipping Date is required"],
+  },
+  deliveryDateExpect: {
+    type: String,
+    required: [true, "Delivery Date is required"],
+  },
+  cost: {
+    type: Number,
+    required: [true, "Delivery Date is required"],
+  },
+  paymentStatus: {
+    type: String,
+    required: [true, "Payment Status is required"],
+  },
+  quantity: {
+    type: Number,
+    required: [true, "Quantity is required"],
+  },
+  weight: {
+    type: Number,
+    required: [true, "Weight is required"],
+  },
+  dimensions: {
+    type: String,
+    required: [true, "Dimensions are required"],
+  },
+  typeOfGoods: {
+    type: String,
+    required: [true, "Type of goods is required"],
+  },
   created_at: {
     type: Date,
     default: Date.now,
@@ -58,3 +90,26 @@ const shipmentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Shipment", shipmentSchema);
+
+// Fields created from frontend and backend in notepad
+// name:title
+// description:description
+// pickup_location:pickup
+// drop_location:delivery
+// current_location:null
+// customer_id: To be added
+// status:Autofill null
+// shipperid:autofill
+// broker_id:brokerName
+// carrier_id:null initially
+// driver_id:initially
+
+
+// shippingDate: shippingDate
+// deliverydateexpect: deliveryDate
+// cost: estimatedCost
+// paymentStatus: paymentStatus
+// typeOfGoods:typeOfGoods (Is required?)
+// quantity: quantity
+// weight:weight
+// dimensions:dimensions

@@ -22,22 +22,9 @@ exports.createShipment = catchAsync(async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (
-      !name ||
-      !description ||
-      !pickup_location ||
-      !drop_location ||
-      !customer_id ||
-      !shipper_id ||
-      !broker_id ||
-      !cost
-    ) {
-      return errorResponse(
-        res,
-        "All required fields must be provided",
-        400,
-        false
-      );
+    if (!name || !description || !pickup_location || !drop_location || !customer_id || 
+      !shipper_id || !broker_id || !cost ) {
+      return errorResponse(res,"All required fields must be provided",400,false);
     }
 
     // Create a new shipment document

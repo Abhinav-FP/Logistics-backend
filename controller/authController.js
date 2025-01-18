@@ -120,7 +120,7 @@ exports.getUsers = catchAsync(async (req, res) => {
 
     const query = type ? { role: type } : {};
 
-    const users = await User.find(query);
+    const users = await User.find(query).select("-password");
 
     if (!users) {
       return errorResponse(res, "No users found", 404);
