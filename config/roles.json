@@ -3,32 +3,41 @@
       {
         "name": "admin",
         "permissions": [
-          "create_account"
+          "create_account",
+          "update-shipment",
+          "view-shipment"
         ]
       },
       {
         "name": "shipper",
         "permissions": [
           "create_account",
-          "create-shipment"
+          "create-shipment",
+          "view-shipment",
+          "update-shipment"
         ]
       },
       {
         "name": "broker",
         "permissions": [
-          "create_account"
+          "create_account",
+          "update-shipment",
+          "view-shipment"
         ]
       },
       {
         "name": "carrier",
         "permissions": [
-          "create_account"
+          "create_account",
+          "update-shipment",
+          "view-shipment"
         ]
       },
       {
         "name": "driver",
         "permissions": [
-          "read_record"
+          "read_record",
+          "view-shipment"
         ]
       }
     ]

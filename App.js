@@ -15,13 +15,15 @@ const corsOptions = {
 
 // const logger = require("./utils/Logger");
 
-const UserRoute = require("./route/userRoutes")
+const UserRoute = require("./route/userRoutes");
+const ShipmentRoute = require("./route/shipmentRoutes");
 
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '2000mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/user", UserRoute);
+app.use("/shipment", ShipmentRoute);
 
 
 const PORT = process.env.REACT_APP_SERVER_DOMIN;

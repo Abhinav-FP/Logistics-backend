@@ -1,5 +1,9 @@
 const Shipment = require("../model/shipment");
-const { validationErrorResponse, errorResponse, successResponse } = require("../utils/ErrorHandling");
+const {
+  validationErrorResponse,
+  errorResponse,
+  successResponse,
+} = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 
 exports.createShipment = catchAsync(async (req, res) => {
@@ -13,11 +17,26 @@ exports.createShipment = catchAsync(async (req, res) => {
       status,
       shipper_id,
       broker_id,
+      cost,
     } = req.body;
 
     // Validate required fields
-    if (!name || !description || !pickup_location || !drop_location || !customer_id || !shipper_id || !broker_id) {
-      return errorResponse(res, "All required fields must be provided", 400, false);
+    if (
+      !name ||
+      !description ||
+      !pickup_location ||
+      !drop_location ||
+      !customer_id ||
+      !shipper_id ||
+      !broker_id ||
+      !cost
+    ) {
+      return errorResponse(
+        res,
+        "All required fields must be provided",
+        400,
+        false
+      );
     }
 
     // Create a new shipment document
@@ -30,6 +49,7 @@ exports.createShipment = catchAsync(async (req, res) => {
       status: status || "pending",
       shipper_id,
       broker_id,
+      cost,
     });
 
     // Respond with success
@@ -47,16 +67,34 @@ exports.updateShipment = catchAsync(async (req, res) => {
       return errorResponse(res, "No data provided to update", 400, false);
     }
 
-    const shipment = await Shipment.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const shipment = await Shipment.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
 
     return successResponse(res, "Shipment updated successfully", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.getShipment = catchAsync(async (req, res) => {
+  try {
+    // const { type } = req.params;
+    // const query = type ? { role: type } : {};
+    const shipment = await Shipment.find(); // Find shipment by ID
+    if (!shipment) {
+      return errorResponse(res, "No data found", 404);
+    }
+    return successResponse(res, "Shipment fetched successfully", 200, shipment);
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
