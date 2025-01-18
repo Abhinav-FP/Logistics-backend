@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { signup, login, createAccount, getUsers } = require("../controller/authController");
+const { signup, login, createAccount, getUsers, profilegettoken } = require("../controller/authController");
 const {checkPermission} = require('../middleware/rbacMiddleware');
 const {verifyToken} = require('../middleware/tokenVerify');
 
@@ -10,5 +10,7 @@ router.post("/login", login);
 router.post("/create-account",verifyToken, checkPermission('create_account'), createAccount);
 
 router.get("/get/:type?",verifyToken, getUsers);
+
+router.get("/get-role",verifyToken, profilegettoken);
 
 module.exports = router;

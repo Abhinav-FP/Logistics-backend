@@ -130,3 +130,20 @@ exports.getUsers = catchAsync(async (req, res) => {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
 });
+
+exports.profilegettoken = catchAsync(async (req, res, next) => {
+  try {
+    const id = req?.user?.id;
+    if (!id) {
+      return errorResponse(res, "User is not authorized or Token is missing", 401);
+    }
+
+    const userprofile = await User.findById(id).select('email role');
+    if (!userprofile) {
+      return errorResponse(res, "User profile not found", 404);
+    }
+    successResponse(res,"Profile retrieved successfully",200,userprofile);
+  } catch (error) {
+    errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+});

@@ -1,3 +1,4 @@
+const PDFDocument = require('pdfkit');
 const Shipment = require("../model/shipment");
 const {
   validationErrorResponse,
@@ -97,5 +98,37 @@ exports.getShipment = catchAsync(async (req, res) => {
     return successResponse(res, "Shipment fetched successfully", 200, shipment);
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.getBOL = catchAsync(async (req, res) => {
+  try {
+    // Create a new PDF document
+    const doc = new PDFDocument();
+
+    // Set headers for the PDF response
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="random.pdf"');
+
+    // Pipe the PDF directly to the response
+    doc.pipe(res);
+
+    // Add content to the PDF
+    doc.fontSize(25).text('Bill of Lading (BOL)', {
+      align: 'center',
+    });
+
+    doc.moveDown();
+    doc.fontSize(12).text('This is a randomly generated PDF for demonstration purposes.', {
+      align: 'left',
+    });
+
+    doc.moveDown();
+    doc.text(`Generated on: ${new Date().toLocaleString()}`);
+
+    // Finalize the PDF and end the response
+    doc.end();
+  } catch (error) {
+    return errorResponse(res, error.message || 'Internal Server Error', 500);
   }
 });
