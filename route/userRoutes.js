@@ -8,6 +8,7 @@ router.post("/login", login);
 
 // Route for creating account
 router.post("/create-account",verifyToken, checkPermission('create_account'), createAccount);
+router.post("/create-carrier",verifyToken, checkPermission('create_account'), createAccount);
 
 router.get("/get/:type?",verifyToken, getUsers);
 

@@ -5,7 +5,7 @@ const {verifyToken} = require('../middleware/tokenVerify');
 
 router.post("/create",verifyToken, checkPermission('create-shipment'), createShipment);
 router.post("/update/:id",verifyToken, checkPermission('update-shipment'), updateShipment);
-router.post("/delete/:id",verifyToken, checkPermission('update-shipment'), deleteShipment);
+router.get("/delete/:id",verifyToken, checkPermission('update-shipment'), deleteShipment);
 router.get("/get",verifyToken, checkPermission('view-shipment'), getShipment);
 router.get("/get-bol",verifyToken, checkPermission('view-shipment'), getBOL);
 

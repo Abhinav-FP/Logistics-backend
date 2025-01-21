@@ -82,9 +82,9 @@ exports.login = catchAsync(async (req, res) => {
 
 exports.createAccount = catchAsync(async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { name, email, role, contact } = req.body;
 
-    if (!email || !role) {
+    if (!email || !role || !name || !contact) {
       return errorResponse(res, "All fields are required", 500, false);
     }
     const password = generator.generate({
@@ -92,11 +92,47 @@ exports.createAccount = catchAsync(async (req, res) => {
       numbers: true,
     });
 
-    
     const record = new User({
+      name,
       email,
       password,
       role,
+      contact,
+      created_by: req.user.id,
+    });
+
+    const result = await record.save();
+    if (result) {
+      successResponse(res, "User created successfully !!", 201, result);
+    } else {
+      errorResponse(res, "Failed to create user.", 500);
+    }
+  } catch (error) {
+    if (error.code === 11000) {
+     return errorResponse(res, "Email already exists.", 400);
+    }
+    errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.createCarrier = catchAsync(async (req, res) => {
+  try {
+    const { name, email, role, contact } = req.body;
+
+    if (!email || !role || !name || !contact) {
+      return errorResponse(res, "All fields are required", 500, false);
+    }
+    const password = generator.generate({
+      length: 10,
+      numbers: true,
+    });
+
+    const record = new User({
+      name,
+      email,
+      password,
+      role,
+      contact,
       created_by: req.user.id,
     });
 
