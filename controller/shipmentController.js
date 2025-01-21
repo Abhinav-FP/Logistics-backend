@@ -7,41 +7,61 @@ const {
 } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 
+
 exports.createShipment = catchAsync(async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      pickup_location,
-      drop_location,
-      customer_id,
-      status,
-      shipper_id,
-      broker_id,
-      cost,
-    } = req.body;
+    console.log("req.body", req.body);
 
-    // Validate required fields
-    if (!name || !description || !pickup_location || !drop_location || !customer_id || 
-      !shipper_id || !broker_id || !cost ) {
-      return errorResponse(res,"All required fields must be provided",400,false);
+    // Define required fields based on the schema
+    const requiredFields = [
+      "name",
+      "description",
+      "pickup_location",
+      "drop_location",
+      "customer_id",
+      "broker_id",
+      "shippingDate",
+      "deliveryDateExpect",
+      "cost",
+      "paymentStatus",
+      "quantity",
+      "weight",
+      "dimensions",
+      "typeOfGoods",
+    ];
+
+    // Check for missing required fields
+    const missingFields = requiredFields.filter((field) => !req.body[field]);
+    const shipper_id = req?.user?.id || null;  
+
+    if (missingFields.length > 0) {
+      return errorResponse(
+        res,
+        `All fields are required`,
+        400,
+        false
+      );
     }
 
-    // Create a new shipment document
-    const shipment = await Shipment.create({
-      name,
-      description,
-      pickup_location,
-      drop_location,
-      customer_id,
-      status: status || "pending",
-      shipper_id,
-      broker_id,
-      cost,
+    const shipmentData = {};
+    const schemaFields = Object.keys(Shipment.schema.paths);
+
+    schemaFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        shipmentData[field] = req.body[field];
+      }
     });
 
-    // Respond with success
-    return successResponse(res, "Shipment created successfully", 201, shipment);
+    shipmentData.shipper_id = shipper_id;
+
+    const shipment = await Shipment.create(shipmentData);
+
+    return successResponse(
+      res,
+      "Shipment created successfully",
+      201,
+      shipment
+    );
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
@@ -69,6 +89,20 @@ exports.updateShipment = catchAsync(async (req, res) => {
     }
 
     return successResponse(res, "Shipment updated successfully", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.deleteShipment = catchAsync(async (req, res) => {
+  try {
+    const shipment = await Shipment.findByIdAndDelete(req.params.id);
+
+    if (!shipment) {
+      return errorResponse(res, "Shipment not found", 404, false);
+    }
+
+    return successResponse(res, "Shipment deleted successfully", 200, shipment);
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
