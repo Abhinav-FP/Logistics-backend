@@ -1,13 +1,14 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const carrierSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Carrier name is required"],
-  },
-  carrier_id: {
+  carrier_id_given: {
     type: String,
     required: [true, "Carrier ID is required"],
+  },
+  career_id_ref: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: [true, "Carrier id reference is required"],
   },
   type: {
     type: String,
@@ -24,18 +25,6 @@ const carrierSchema = new mongoose.Schema({
   size: {
     type: String,
     required: [true, "Fleet size is required"],
-  },
-  information: {
-    type: String,
-    required: [true, "Contact information is required"],
-  },
-  phone: {
-    type: String,
-    required: [true, "Phone number is required"],
-  },
-  email: {
-    type: String,
-    required: [true, "Email address is required"],
   },
   fax: {
     type: String,
@@ -63,6 +52,6 @@ const carrierSchema = new mongoose.Schema({
   },
 });
 
-const Carrier = mongoose.model('Carrier', carrierSchema);
+const Carrier = mongoose.model("Carrier", carrierSchema);
 
 module.exports = Carrier;

@@ -1,4 +1,6 @@
 const User = require("../model/user");
+const Carrier = require("../model/carrier");
+const Customer = require("../model/customer");
 const generator = require("generate-password");
 const jwt = require("jsonwebtoken");
 // const { v4: uuidv4 } = require('uuid');
@@ -117,17 +119,22 @@ exports.createAccount = catchAsync(async (req, res) => {
 
 exports.createCarrier = catchAsync(async (req, res) => {
   try {
+    console.log("req.body", req.body);
     const { name, email, role, contact } = req.body;
 
+    // Validate required fields
     if (!email || !role || !name || !contact) {
       return errorResponse(res, "All fields are required", 500, false);
     }
+
+    // Generate password
     const password = generator.generate({
       length: 10,
       numbers: true,
     });
 
-    const record = new User({
+    // Save user data to User table
+    const userRecord = new User({
       name,
       email,
       password,
@@ -136,17 +143,115 @@ exports.createCarrier = catchAsync(async (req, res) => {
       created_by: req.user.id,
     });
 
-    const result = await record.save();
-    if (result) {
-      successResponse(res, "User created successfully !!", 201, result);
+    const userResult = await userRecord.save();
+
+    if (!userResult) {
+      return errorResponse(res, "Failed to create user.", 500);
+    }
+
+    // Save remaining data to Carrier table with reference to User
+    const carrierRecord = new Carrier({
+      carrier_id_given: req.body.id,
+      type: req.body.type,
+      companyname: req.body.companyname,
+      license: req.body.license,
+      size: req.body.size,
+      fax: req.body.fax,
+      address: req.body.address,
+      country: req.body.country,
+      state: req.body.state,
+      city: req.body.city,
+      postal: req.body.postal,
+      career_id_ref: userResult._id, 
+    });
+
+    const carrierResult = await carrierRecord.save();
+
+    if (carrierResult) {
+      successResponse(res, "Carrier created successfully!", 201, {
+        user: userResult,
+        carrier: carrierResult,
+      });
     } else {
-      errorResponse(res, "Failed to create user.", 500);
+      // Rollback user creation if carrier creatison fails
+      await User.findByIdAndDelete(userResult._id);
+      errorResponse(res, "Failed to create carrier.", 500);
     }
   } catch (error) {
     if (error.code === 11000) {
-     return errorResponse(res, "Email already exists.", 400);
+      return errorResponse(res, "Email already exists.", 400);
     }
     errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.createCustomer = catchAsync(async (req, res) => {
+  try {
+    console.log("req.body", req.body);
+    const { name, email, role, contact, address } = req.body;
+
+    // Validate required fields
+    if (!email || !role || !name || !contact || !address) {
+      return errorResponse(res, "All fields are required", 500, false);
+    }
+
+    // Generate password
+    const password = generator.generate({
+      length: 10,
+      numbers: true,
+    });
+
+    // Save user data to User table
+    const userRecord = new User({
+      name,
+      email,
+      password,
+      role,
+      contact,
+      created_by: req.user.id,
+    });
+
+    const userResult = await userRecord.save();
+
+    if (!userResult) {
+      return errorResponse(res, "Failed to create user.", 500);
+    }
+
+    // Save remaining data to Carrier table with reference to User
+    const customerRecord = new Customer({
+      address: address,
+      user_id_ref: userResult._id, 
+    });
+
+    const customerResult = await customerRecord.save();
+
+    if (customerResult) {
+      successResponse(res, "Customer created successfully!", 201, {
+        user: userResult,
+        customer: customerResult,
+      });
+    } else {
+      // Rollback user creation if carrier creatison fails
+      await User.findByIdAndDelete(userResult._id);
+      errorResponse(res, "Failed to create customer.", 500);
+    }
+  } catch (error) {
+    if (error.code === 11000) {
+      return errorResponse(res, "Email already exists.", 400);
+    }
+    errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.getCarrier = catchAsync(async (req, res) => {
+  try {
+    const carriers = await Carrier.find().select("-password").populate("career_id_ref");
+    if (!carriers) {
+      return errorResponse(res, "No users found", 404);
+    }
+    return successResponse(res, "Users fetched successfully", 200, carriers);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
   }
 });
 
