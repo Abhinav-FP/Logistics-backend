@@ -10,7 +10,7 @@ const catchAsync = require("../utils/catchAsync");
 
 exports.createShipment = catchAsync(async (req, res) => {
   try {
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
 
     // Define required fields based on the schema
     const requiredFields = [
@@ -110,9 +110,22 @@ exports.deleteShipment = catchAsync(async (req, res) => {
 
 exports.getShipment = catchAsync(async (req, res) => {
   try {
-    // const { type } = req.params;
-    // const query = type ? { role: type } : {};
-    const shipment = await Shipment.find(); // Find shipment by ID
+    console.log("req.user",req.user);
+    const { id } = req.params;
+    const query = id ? { _id: id } : {};
+    const shipment = await Shipment.find(query); 
+    if (!shipment) {
+      return errorResponse(res, "No data found", 404);
+    }
+    return successResponse(res, "Shipment fetched successfully", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.getShipmentofBroker = catchAsync(async (req, res) => {
+  try {
+    const shipment = await Shipment.find({broker_id: req.user.id}); 
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }

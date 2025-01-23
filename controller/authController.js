@@ -119,7 +119,7 @@ exports.createAccount = catchAsync(async (req, res) => {
 
 exports.createCarrier = catchAsync(async (req, res) => {
   try {
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
     const { name, email, role, contact } = req.body;
 
     // Validate required fields
@@ -187,7 +187,7 @@ exports.createCarrier = catchAsync(async (req, res) => {
 
 exports.createCustomer = catchAsync(async (req, res) => {
   try {
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
     const { name, email, role, contact, address } = req.body;
 
     // Validate required fields
