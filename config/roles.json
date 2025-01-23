@@ -4,8 +4,10 @@
         "name": "admin",
         "permissions": [
           "create_account",
+          "create-shipment",
+          "view-shipment",
           "update-shipment",
-          "view-shipment"
+          "read_record"
         ]
       },
       {
@@ -14,7 +16,8 @@
           "create_account",
           "create-shipment",
           "view-shipment",
-          "update-shipment"
+          "update-shipment",
+          "read_record"
         ]
       },
       {
