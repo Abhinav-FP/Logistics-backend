@@ -8,7 +8,7 @@ exports.getDirections = async (req, res) => {
 
     try {
         const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${StartLocation}&destination=${EndLocation}&key=${apiKey}`;
-        const currentToStartUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${CurrentLocation}&destination=${StartLocation}&key=${apiKey}`;
+        const currentToStartUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${CurrentLocation}&destination=${EndLocation}&key=${apiKey}`;
 
 
 
