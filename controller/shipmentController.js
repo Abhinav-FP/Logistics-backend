@@ -32,7 +32,7 @@ exports.createShipment = catchAsync(async (req, res) => {
 
     // Check for missing required fields
     const missingFields = requiredFields.filter((field) => !req.body[field]);
-    const shipper_id = req?.user?.id || null;  
+    const shipper_id = req?.user?.id || null;
 
     if (missingFields.length > 0) {
       return errorResponse(
@@ -94,6 +94,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
   }
 });
 
+
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
     const shipment = await Shipment.findByIdAndDelete(req.params.id);
@@ -110,10 +111,21 @@ exports.deleteShipment = catchAsync(async (req, res) => {
 
 exports.getShipment = catchAsync(async (req, res) => {
   try {
-    console.log("req.user",req.user);
+    console.log("req.user", req.user);
     const { id } = req.params;
     const query = id ? { _id: id } : {};
-    const shipment = await Shipment.find(query); 
+    const shipment = await Shipment.find(query).populate(
+      {
+        path: "broker_id",
+        select: "email"
+      }
+    ).populate({
+      path: "shipper_id",
+      select: "email"
+    }).populate({
+      path: "customer_id",
+      select: "email"
+    });
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
@@ -125,7 +137,7 @@ exports.getShipment = catchAsync(async (req, res) => {
 
 exports.getShipmentofBroker = catchAsync(async (req, res) => {
   try {
-    const shipment = await Shipment.find({broker_id: req.user.id}); 
+    const shipment = await Shipment.find({ broker_id: req.user.id });
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
