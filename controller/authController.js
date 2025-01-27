@@ -1,6 +1,7 @@
 const User = require("../model/user");
 const Carrier = require("../model/carrier");
 const Customer = require("../model/customer");
+const Driver = require("../model/driver");
 const generator = require("generate-password");
 const jwt = require("jsonwebtoken");
 // const { v4: uuidv4 } = require('uuid');
@@ -243,6 +244,64 @@ exports.createCustomer = catchAsync(async (req, res) => {
   }
 });
 
+exports.createDriver = catchAsync(async (req, res) => {
+  try {
+    // console.log("req.body", req.body);
+    const { name, email, role, contact, address, vin } = req.body;
+
+    // Validate required fields
+    if (!email || !role || !name || !contact || !address || !vin) {
+      return errorResponse(res, "All fields are required", 500, false);
+    }
+
+    const password = generator.generate({
+      length: 10,
+      numbers: true,
+    });
+
+    // Save user data to User table
+    const userRecord = new User({
+      name,
+      email,
+      password,
+      role,
+      contact,
+      created_by: req.user.id,
+    });
+
+    const userResult = await userRecord.save();
+
+    if (!userResult) {
+      return errorResponse(res, "Failed to create user.", 500);
+    }
+
+    // Save remaining data to Carrier table with reference to User
+    const driverRecord = new Driver({
+      vin:vin,
+      address: address,
+      driver_id_ref: userResult._id, 
+    });
+
+    const driverResult = await driverRecord.save();
+
+    if (driverResult) {
+      successResponse(res, "Customer created successfully!", 201, {
+        user: userResult,
+        customer: driverResult,
+      });
+    } else {
+      // Rollback user creation if carrier creatison fails
+      await User.findByIdAndDelete(userResult._id);
+      errorResponse(res, "Failed to create customer.", 500);
+    }
+  } catch (error) {
+    if (error.code === 11000) {
+      return errorResponse(res, "Email already exists.", 400);
+    }
+    errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
 exports.getCarrier = catchAsync(async (req, res) => {
   try {
     const carriers = await Carrier.find().select("-password").populate("career_id_ref");
@@ -250,6 +309,18 @@ exports.getCarrier = catchAsync(async (req, res) => {
       return errorResponse(res, "No users found", 404);
     }
     return successResponse(res, "Users fetched successfully", 200, carriers);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.getDriver = catchAsync(async (req, res) => {
+  try {
+    const drivers = await Driver.find().select("-password").populate("driver_id_ref");
+    if (!drivers) {
+      return errorResponse(res, "No data found", 404);
+    }
+    return successResponse(res, "Drivers fetched successfully", 200, drivers);
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
