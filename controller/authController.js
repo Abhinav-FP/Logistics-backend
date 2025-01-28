@@ -400,7 +400,6 @@ exports.updateNotification = catchAsync(async (req, res) => {
 exports.NotificationGet = catchAsync(async (req, res) => {
   console.log(req.user);
   const UserId = req.user.id;
-  console.log("UserId",)
   try {
     const query = {
       $or: [
@@ -409,10 +408,9 @@ exports.NotificationGet = catchAsync(async (req, res) => {
         { receiverBrokerId: UserId },
         { receiverCarrierId: UserId },
       ],
-      isRead: false, 
+      isRead: false,
     };
     const notification = await NotificationModel.find(query)
-      .sort({ updatedAt: -1 })
       .populate("ShipmentId")
       .populate("senderId", "-password")
       .populate("receiverShipperId", "-password")
@@ -420,6 +418,7 @@ exports.NotificationGet = catchAsync(async (req, res) => {
       .populate("receiverBrokerId", "-password")
       .populate("receiverCarrierId", "-password");
 
+      console.log("notification" ,notification)
     const notificationCount = await NotificationModel.countDocuments(query);
     res.json({
       status: true,
@@ -438,7 +437,6 @@ exports.NotificationGet = catchAsync(async (req, res) => {
 
 exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
   const UserId = req.user.id;
-  console.log("UserId",UserId)
   const { shipmentId } = req.body;
   if (!UserId || !shipmentId) {
     return res.status(400).json({
@@ -446,29 +444,27 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
       message: 'UserId and ShipmentId are required',
     });
   }
-  try {
-    const result = await NotificationModel.updateMany(
-      {
-        $or: [
-          { receiverShipperId: UserId },
-          { receiverCustomerId: UserId },
-          { receiverBrokerId: UserId },
-          { receiverCarrierId: UserId },
-        ],
-        shipmentId: shipmentId,
-      },
-      { $set: { isRead: true } }
-    );
 
+  try {
+    const result = await NotificationModel.findOneAndUpdate(
+      { ShipmentId: shipmentId },
+      { isRead: "true" },
+      { new: true }   
+    );
     res.json({
       status: true,
-      message: 'Notification(s) marked as read successfully',
-      updatedCount: result.nModified,
+      message: 'Notification marked as read successfully',
+      notification: result, 
     });
   } catch (error) {
+    
     res.status(500).json({
       status: false,
-      message: error.message || 'Failed to mark notifications as read',
+      message: error.message || 'Failed to mark notification as read',
     });
   }
 });
+
+
+
+

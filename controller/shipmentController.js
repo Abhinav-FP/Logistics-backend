@@ -6,6 +6,7 @@ const {
   successResponse,
 } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
+const { createNotification, updateNotification } = require('./authController'); // Import the Notification function
 // const puppeteer = require('puppeteer');
 // var Promise = require('bluebird');
 // const hb = require('handlebars');
@@ -51,7 +52,6 @@ const catchAsync = require("../utils/catchAsync");
 //        return Buffer.from(Object.values(data));
 //     }).asCallback(callback);
 // }
-const { createNotification, updateNotification } = require('./authController'); // Import the Notification function
 
 exports.createShipment = catchAsync(async (req, res) => {
   try {
