@@ -8,6 +8,6 @@ router.post("/update/:id",verifyToken, checkPermission('update-shipment'), updat
 router.get("/delete/:id",verifyToken, checkPermission('update-shipment'), deleteShipment);
 router.get("/get/:id?",verifyToken, checkPermission('view-shipment'), getShipment);
 router.get("/get-shipment-broker",verifyToken, checkPermission('view-shipment'), getShipmentofBroker);
-router.get("/get-bol",verifyToken, checkPermission('view-shipment'), getBOL);
+// router.get("/get-bol",verifyToken, checkPermission('view-shipment'), getBOL);
 
 module.exports = router;
