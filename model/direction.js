@@ -1,25 +1,100 @@
 const mongoose = require("mongoose");
+const { v4: uuidv4 } = require('uuid'); 
 
-
-const directionschema = mongoose.Schema({
+const directionsSchema = mongoose.Schema({
     StartLocation: {
-        type: Object,
-        required: true
+        lat: {
+            type: Number,
+            required: true
+        },
+        lng: {
+            type: Number,
+            required: true
+        },
+        distination: {
+            type: String,
+            required: true
+        },
+        duration: {
+            type: String,
+            required: true
+        },
+        startToEndPolyline: {
+            type: String,
+            required: true
+        },
+        created_at: {
+            type: Date,
+            default: Date.now
+        }
     },
-    CurrentLocation: {
-        type: Object,
-        required: true
-    },
+    CurrentLocation: [{
+        lat: {
+            type: Number,
+            required: true
+        },
+        lng: {
+            type: Number,
+            required: true
+        },
+        distination: {
+            type: String,
+            required: true
+        },
+        duration: {
+            type: String,
+            required: true
+        },
+        startToEndPolyline: {
+            type: String,
+            required: true
+        },
+        created_at: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     EndLocation: {
-        type: Object,
-        required: true
+        lat: {
+            type: Number,
+            required: true
+        },
+        lng: {
+            type: Number,
+            required: true
+        },
+        distination: {
+            type: String,
+            required: true
+        },
+        duration: {
+            type: String,
+            required: true
+        },
+        startToEndPolyline: {
+            type: String,
+            required: true
+        },
+        created_at: {
+            type: Date,
+            default: Date.now
+        }
     },
     routeDetails: {
         type: Object,
+    },
+    Shipment_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Shipment",
+        default: "678f8a5225ab3bc62aea25ca"
+    },
+    direction_uuid: {
+        type: String,
+        unique: true,
+        default: () => uuidv4()
+    },
+});
 
-    }
-})
+const directionModel = mongoose.model("direction", directionsSchema);
 
-const directionmodels = mongoose.model("direction", directionschema);
-
-module.exports = directionmodels; 
+module.exports = directionModel;
