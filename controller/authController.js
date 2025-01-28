@@ -410,7 +410,7 @@ exports.NotificationGet = catchAsync(async (req, res) => {
       ],
       isRead: false,
     };
-    const notification = await NotificationModel.find(query)
+    const notification = await NotificationModel.find(query).sort({ createdAt: -1 })
       .populate("ShipmentId")
       .populate("senderId", "-password")
       .populate("receiverShipperId", "-password")
