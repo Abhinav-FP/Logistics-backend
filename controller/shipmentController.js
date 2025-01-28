@@ -51,12 +51,10 @@ const catchAsync = require("../utils/catchAsync");
 //        return Buffer.from(Object.values(data));
 //     }).asCallback(callback);
 // }
+const { createNotification, updateNotification } = require('./authController'); // Import the Notification function
 
 exports.createShipment = catchAsync(async (req, res) => {
   try {
-    // console.log("req.body", req.body);
-
-    // Define required fields based on the schema
     const requiredFields = [
       "name",
       "description",
@@ -99,7 +97,9 @@ exports.createShipment = catchAsync(async (req, res) => {
     shipmentData.shipper_id = shipper_id;
 
     const shipment = await Shipment.create(shipmentData);
-
+    await createNotification({
+      body: { senderId: shipper_id, receiverBrokerId: req.body.broker_id, receiverCustomerId: req.body.customer_id, ShipmentId: shipment._id },
+    });
     return successResponse(
       res,
       "Shipment created successfully",
@@ -114,11 +114,9 @@ exports.createShipment = catchAsync(async (req, res) => {
 exports.updateShipment = catchAsync(async (req, res) => {
   try {
     const updateData = req.body;
-
     if (!updateData || Object.keys(updateData).length === 0) {
       return errorResponse(res, "No data provided to update", 400, false);
     }
-
     const shipment = await Shipment.findByIdAndUpdate(
       req.params.id,
       updateData,
@@ -127,11 +125,12 @@ exports.updateShipment = catchAsync(async (req, res) => {
         runValidators: true,
       }
     );
-
     if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
-
+    await updateNotification({
+      body: { senderId: req.user.id, receiverBrokerId: updateData.broker_id, receiverCustomerId: updateData.customer_id, ShipmentId: shipment._id },
+    });
     return successResponse(res, "Shipment updated successfully", 200, shipment);
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
