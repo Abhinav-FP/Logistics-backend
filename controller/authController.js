@@ -5,8 +5,9 @@ const Driver = require("../model/driver");
 const generator = require("generate-password");
 const jwt = require("jsonwebtoken");
 // const { v4: uuidv4 } = require('uuid');
-const {validationErrorResponse,errorResponse,  successResponse} = require("../utils/ErrorHandling");
+const { validationErrorResponse, errorResponse, successResponse } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
+const NotificationModel = require("../model/Notfication");
 
 exports.signup = catchAsync(async (req, res) => {
   try {
@@ -23,7 +24,7 @@ exports.signup = catchAsync(async (req, res) => {
       email,
       password,
       role,
-      created_by:null,
+      created_by: null,
     });
 
     const result = await record.save();
@@ -112,7 +113,7 @@ exports.createAccount = catchAsync(async (req, res) => {
     }
   } catch (error) {
     if (error.code === 11000) {
-     return errorResponse(res, "Email already exists.", 400);
+      return errorResponse(res, "Email already exists.", 400);
     }
     errorResponse(res, error.message || "Internal Server Error", 500);
   }
@@ -163,7 +164,7 @@ exports.createCarrier = catchAsync(async (req, res) => {
       state: req.body.state,
       city: req.body.city,
       postal: req.body.postal,
-      career_id_ref: userResult._id, 
+      career_id_ref: userResult._id,
     });
 
     const carrierResult = await carrierRecord.save();
@@ -221,7 +222,7 @@ exports.createCustomer = catchAsync(async (req, res) => {
     // Save remaining data to Carrier table with reference to User
     const customerRecord = new Customer({
       address: address,
-      user_id_ref: userResult._id, 
+      user_id_ref: userResult._id,
     });
 
     const customerResult = await customerRecord.save();
@@ -277,9 +278,9 @@ exports.createDriver = catchAsync(async (req, res) => {
 
     // Save remaining data to Carrier table with reference to User
     const driverRecord = new Driver({
-      vin:vin,
+      vin: vin,
       address: address,
-      driver_id_ref: userResult._id, 
+      driver_id_ref: userResult._id,
     });
 
     const driverResult = await driverRecord.save();
@@ -354,8 +355,120 @@ exports.profilegettoken = catchAsync(async (req, res, next) => {
     if (!userprofile) {
       return errorResponse(res, "User profile not found", 404);
     }
-    successResponse(res,"Profile retrieved successfully",200,userprofile);
+    successResponse(res, "Profile retrieved successfully", 200, userprofile);
   } catch (error) {
     errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+});
+
+
+exports.createNotification = catchAsync(async (req, res) => {
+  try {
+    const { senderId, receiverShipperId, receiverCustomerId, receiverBrokerId, receiverCarrierId, ShipmentId } = req.body;
+    const record = new NotificationModel({
+      senderId,
+      receiverShipperId,
+      receiverCustomerId,
+      receiverBrokerId,
+      receiverCarrierId,
+      ShipmentId,
+    });
+    const data = await record.save();
+  } catch (error) {
+    console.error(error);
+    return errorResponse(res, error.message || "Internal Server Error");
+  }
+});
+
+
+
+exports.updateNotification = catchAsync(async (req, res) => {
+  try {
+    const { senderId, receiverShipperId, receiverCustomerId, receiverBrokerId, receiverCarrierId, ShipmentId } = req.body;
+    const updatedNotification = await NotificationModel.findOneAndUpdate(
+      { ShipmentId },
+      { senderId, receiverShipperId, receiverCustomerId, receiverBrokerId, receiverCarrierId, ShipmentId },
+      { new: true, runValidators: true }
+    );
+  } catch (error) {
+    console.error(error);
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+
+exports.NotificationGet = catchAsync(async (req, res) => {
+  console.log(req.user);
+  const UserId = req.user.id;
+  console.log("UserId",)
+  try {
+    const query = {
+      $or: [
+        { receiverShipperId: UserId },
+        { receiverCustomerId: UserId },
+        { receiverBrokerId: UserId },
+        { receiverCarrierId: UserId },
+      ],
+      isRead: false, 
+    };
+    const notification = await NotificationModel.find(query)
+      .sort({ updatedAt: -1 })
+      .populate("ShipmentId")
+      .populate("senderId", "-password")
+      .populate("receiverShipperId", "-password")
+      .populate("receiverCustomerId", "-password")
+      .populate("receiverBrokerId", "-password")
+      .populate("receiverCarrierId", "-password");
+
+    const notificationCount = await NotificationModel.countDocuments(query);
+    res.json({
+      status: true,
+      data: notification,
+      count: notificationCount,
+      message: 'Notifications fetched successfully',
+    });
+  } catch (error) {
+    res.json({
+      status: false,
+      message: error.message || 'Failed to fetch notifications',
+    });
+  }
+});
+
+
+exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
+  const UserId = req.user.id;
+  console.log("UserId",UserId)
+  const { shipmentId } = req.body;
+  if (!UserId || !shipmentId) {
+    return res.status(400).json({
+      status: false,
+      message: 'UserId and ShipmentId are required',
+    });
+  }
+  try {
+    const result = await NotificationModel.updateMany(
+      {
+        $or: [
+          { receiverShipperId: UserId },
+          { receiverCustomerId: UserId },
+          { receiverBrokerId: UserId },
+          { receiverCarrierId: UserId },
+        ],
+        shipmentId: shipmentId,
+      },
+      { $set: { isRead: true } }
+    );
+
+    res.json({
+      status: true,
+      message: 'Notification(s) marked as read successfully',
+      updatedCount: result.nModified,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message || 'Failed to mark notifications as read',
+    });
   }
 });
