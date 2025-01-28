@@ -418,7 +418,7 @@ exports.NotificationGet = catchAsync(async (req, res) => {
       .populate("receiverBrokerId", "-password")
       .populate("receiverCarrierId", "-password");
 
-      console.log("notification" ,notification)
+    console.log("notification", notification)
     const notificationCount = await NotificationModel.countDocuments(query);
     res.json({
       status: true,
@@ -449,15 +449,15 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     const result = await NotificationModel.findOneAndUpdate(
       { ShipmentId: shipmentId },
       { isRead: "true" },
-      { new: true }   
+      { new: true }
     );
     res.json({
       status: true,
       message: 'Notification marked as read successfully',
-      notification: result, 
+      notification: result,
     });
   } catch (error) {
-    
+
     res.status(500).json({
       status: false,
       message: error.message || 'Failed to mark notification as read',
