@@ -121,7 +121,6 @@ exports.createAccount = catchAsync(async (req, res) => {
 
 exports.createCarrier = catchAsync(async (req, res) => {
   try {
-    // console.log("req.body", req.body);
     const { name, email, role, contact } = req.body;
 
     // Validate required fields
@@ -189,7 +188,6 @@ exports.createCarrier = catchAsync(async (req, res) => {
 
 exports.createCustomer = catchAsync(async (req, res) => {
   try {
-    // console.log("req.body", req.body);
     const { name, email, role, contact, address } = req.body;
 
     // Validate required fields
@@ -247,7 +245,6 @@ exports.createCustomer = catchAsync(async (req, res) => {
 
 exports.createDriver = catchAsync(async (req, res) => {
   try {
-    // console.log("req.body", req.body);
     const { name, email, role, contact, address, vin } = req.body;
 
     // Validate required fields
@@ -398,7 +395,6 @@ exports.updateNotification = catchAsync(async (req, res) => {
 
 
 exports.NotificationGet = catchAsync(async (req, res) => {
-  console.log(req.user);
   const UserId = req.user.id;
   try {
     const query = {
@@ -417,8 +413,6 @@ exports.NotificationGet = catchAsync(async (req, res) => {
       .populate("receiverCustomerId", "-password")
       .populate("receiverBrokerId", "-password")
       .populate("receiverCarrierId", "-password");
-
-    console.log("notification", notification)
     const notificationCount = await NotificationModel.countDocuments(query);
     res.json({
       status: true,

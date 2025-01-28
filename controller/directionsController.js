@@ -208,7 +208,6 @@ exports.updateDirections = catchAsync(
                     { new: true }
                 );
     
-                console.log("Updated document:", result);
                 res.json({
                     success: true,
                     message: "Directions updated successfully",

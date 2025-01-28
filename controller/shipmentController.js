@@ -154,7 +154,6 @@ exports.deleteShipment = catchAsync(async (req, res) => {
 
 exports.getShipment = catchAsync(async (req, res) => {
   try {
-    console.log("req.user", req.user);
     const { id } = req.params;
     const query = id ? { _id: id } : {};
     const shipment = await Shipment.find(query).populate(
