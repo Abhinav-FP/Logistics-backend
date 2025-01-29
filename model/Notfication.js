@@ -61,10 +61,6 @@ const NotificationSchema = new mongoose.Schema({
     ref: "Shipment",
     required: true,
   },
-  MarkAsRead :{
-    type : Boolean ,
-    default : false  
-  },
 }, { timestamps: true });
 
 const NotificationModel = mongoose.model("Notification", NotificationSchema);
