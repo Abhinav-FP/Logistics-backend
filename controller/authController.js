@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const { validationErrorResponse, errorResponse, successResponse } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 const NotificationModel = require("../model/Notfication");
+const shipment = require("../model/shipment");
 
 exports.signup = catchAsync(async (req, res) => {
   try {
@@ -534,3 +535,36 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     });
   }
 });
+
+
+
+// DashboardApi 
+
+
+exports.DashboardApi = catchAsync(async (req, res) => {
+  try {
+    const Users = await User.countDocuments({});
+    const Shipment = await shipment.countDocuments({});
+    const PendingShipment = await shipment.find({ status: "pending" }).countDocuments();
+    const transitShipment = await shipment.find({ status: "transit" }).countDocuments();
+    const deliveredShipment = await shipment.find({ status: "delivered" }).countDocuments();
+    const PayOnDeliveryShipment = await shipment.find({ paymentStatus: "PayOnDelivery" }).countDocuments();
+    const DonePayShipment = await shipment.find({ paymentStatus: "Done" }).countDocuments();
+    const ShimentData = await shipment.find({}).limit(5);
+    res.json({
+      status: true,
+      message: "Dashboard fetched successfully",
+      Users,
+      Shipment,
+      PendingShipment,
+      deliveredShipment,
+      transitShipment,
+      PayOnDeliveryShipment,
+      DonePayShipment,
+      ShimentData
+    })
+  } catch (error) {
+    console.error("Error occurred:", error);
+    errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+})
