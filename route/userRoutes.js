@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { signup, login, createAccount, getUsers, profilegettoken, createCarrier, createCustomer, getCarrier, createDriver, getDriver, NotificationGet, MarkNotificationAsRead, resetPassword } = require("../controller/authController");
+const { signup, login, createAccount, getUsers, profilegettoken, createCarrier, createCustomer, getCarrier, createDriver, getDriver, NotificationGet, MarkNotificationAsRead, resetPassword, DashboardApi } = require("../controller/authController");
 const {checkPermission} = require('../middleware/rbacMiddleware');
 const {verifyToken} = require('../middleware/tokenVerify');
 
