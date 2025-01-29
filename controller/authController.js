@@ -84,6 +84,41 @@ exports.login = catchAsync(async (req, res) => {
   }
 });
 
+exports.resetPassword = catchAsync(async (req, res) => {
+  try {
+    const { password, newpassword } = req.body;
+
+    if (!newpassword || !password) {
+      return res.status(400).json({
+        status: false,
+        message: "Both current and new passwords are required",
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return errorResponse(res, "User not found", 404, false);
+    }
+
+    if (user.password !== password) {
+      return res.status(401).json({
+        status: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    user.password = newpassword;
+    await user.save(); 
+
+    return res.status(200).json({
+      status: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
 exports.createAccount = catchAsync(async (req, res) => {
   try {
     const { name, email, role, contact } = req.body;

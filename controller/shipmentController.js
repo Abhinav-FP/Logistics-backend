@@ -48,7 +48,6 @@ const { createNotification, updateNotification } = require('./authController'); 
 //        return Buffer.from(Object.values(data));
 //     }).asCallback(callback);
 // }
-
 exports.createShipment = catchAsync(async (req, res) => {
   try {
     const requiredFields = [
