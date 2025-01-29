@@ -1,10 +1,6 @@
 const PDFDocument = require('pdfkit');
 const Shipment = require("../model/shipment");
-const {
-  validationErrorResponse,
-  errorResponse,
-  successResponse,
-} = require("../utils/ErrorHandling");
+const { validationErrorResponse, errorResponse,successResponse,} = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 const { createNotification, updateNotification } = require('./authController'); // Import the Notification function
 // const puppeteer = require('puppeteer');
@@ -98,8 +94,14 @@ exports.createShipment = catchAsync(async (req, res) => {
 
     const shipment = await Shipment.create(shipmentData);
     await createNotification({
-      body: { senderId: shipper_id, receiverBrokerId: req.body.broker_id, receiverCustomerId: req.body.customer_id, ShipmentId: shipment._id },
+      body: {
+        senderId: shipper_id,
+        receiverBrokerId: [req.body.broker_id].map(id => ({ Receiver: id })),
+        receiverCustomerId: [req.body.customer_id].map(id => ({ Receiver: id })),
+        ShipmentId: shipment._id,
+      },
     });
+    
     return successResponse(
       res,
       "Shipment created successfully",
@@ -129,7 +131,12 @@ exports.updateShipment = catchAsync(async (req, res) => {
       return errorResponse(res, "Shipment not found", 404, false);
     }
     await updateNotification({
-      body: { senderId: req.user.id, receiverBrokerId: updateData.broker_id, receiverCustomerId: updateData.customer_id, ShipmentId: shipment._id },
+      body: {
+        senderId: req.user.id,
+        receiverBrokerId: updateData.broker_id,
+        receiverCustomerId: updateData.customer_id,
+        ShipmentId: shipment._id,
+      },
     });
     return successResponse(res, "Shipment updated successfully", 200, shipment);
   } catch (error) {

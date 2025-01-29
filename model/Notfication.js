@@ -6,34 +6,67 @@ const NotificationSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  receiverShipperId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-  receiverCustomerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-  receiverBrokerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-  receiverCarrierId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
+  receiverShipperId: [{
+    Receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    IsRead: {
+      type: Boolean,
+      default: false,
+    }
+  }],
+  receiverCustomerId: [{
+    Receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    IsRead: {
+      type: Boolean,
+      default: false,
+    }
+  }],
+  receiverBrokerId: [{
+    Receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    IsRead: {
+      type: Boolean,
+      default: false,
+    }
+  }],
+  receiverCarrierId: [{
+    Receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    IsRead: {
+      type: Boolean,
+      default: false,
+    }
+  }] , 
+  receiverDriverId: [{
+    Receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    IsRead: {
+      type: Boolean,
+      default: false,
+    }
+  }] , 
   ShipmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Shipment",
     required: true,
   },
-  isRead :{
-    type :String ,
+  MarkAsRead :{
+    type : Boolean ,
     default : false  
   },
 }, { timestamps: true });
 
+const NotificationModel = mongoose.model("Notification", NotificationSchema);
 
-const NoficationModel = mongoose.model("notification", NotificationSchema);
-
-module.exports = NoficationModel;
+module.exports = NotificationModel;

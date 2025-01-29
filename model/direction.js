@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { v4: uuidv4 } = require('uuid'); 
+const { v4: uuidv4 } = require('uuid');
 
 const directionsSchema = mongoose.Schema({
     StartLocation: {
@@ -86,7 +86,7 @@ const directionsSchema = mongoose.Schema({
     Shipment_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Shipment",
-        default: "678f8a5225ab3bc62aea25ca"
+        required: true
     },
     direction_uuid: {
         type: String,
