@@ -6,7 +6,7 @@ const generator = require("generate-password");
 const jwt = require("jsonwebtoken");
 const { validationErrorResponse, errorResponse, successResponse } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
-const NotificationModel = require("../model/Notfication");
+const NotificationModel = require("../model/Notification");
 const shipment = require("../model/shipment");
 
 exports.signup = catchAsync(async (req, res) => {

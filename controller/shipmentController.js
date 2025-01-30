@@ -2,6 +2,7 @@ const PDFDocument = require('pdfkit');
 const Shipment = require("../model/shipment");
 const { validationErrorResponse, errorResponse,successResponse,} = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
+const notification  = require("../model/Notification")
 const { createNotification, updateNotification } = require('./authController'); // Import the Notification function
 // const puppeteer = require('puppeteer');
 // var Promise = require('bluebird');
@@ -146,9 +147,13 @@ exports.updateShipment = catchAsync(async (req, res) => {
 
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
+    const notificationdata = await notification.findOneAndDelete({ ShipmentId: req.params.id });
+    if ( !notificationdata) {
+      return errorResponse(res, "Shipment not found", 404, false);
+    }
     const shipment = await Shipment.findByIdAndDelete(req.params.id);
 
-    if (!shipment) {
+    if (!shipment ) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
 
