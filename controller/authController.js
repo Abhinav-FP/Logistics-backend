@@ -8,6 +8,8 @@ const { validationErrorResponse, errorResponse, successResponse } = require("../
 const catchAsync = require("../utils/catchAsync");
 const NotificationModel = require("../model/Notification");
 const shipment = require("../model/shipment");
+const Otp = require("../Email/Otp");
+const nodemailer = require('nodemailer');
 
 exports.signup = catchAsync(async (req, res) => {
   try {
@@ -108,7 +110,7 @@ exports.resetPassword = catchAsync(async (req, res) => {
     }
 
     user.password = newpassword;
-    await user.save(); 
+    await user.save();
 
     return res.status(200).json({
       status: true,
@@ -603,3 +605,77 @@ exports.DashboardApi = catchAsync(async (req, res) => {
     errorResponse(res, error.message || "Failed to fetch profile", 500);
   }
 })
+
+
+// Forget Password 
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
+}
+
+
+exports.forgotlinkrecord = catchAsync(async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return validationErrorResponse(res, { email: 'Email is required' });
+    }
+    const record = await User.findOne({ email: email });
+    if (!record) {
+      return errorResponse(res, "No user found with this email", 404);
+    }
+    const customerUser = record.name;
+    const OTP = generateOTP();
+    let transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    const emailHtml = Otp(OTP, customerUser);
+
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: record.email,
+      OTP: OTP,
+      subject: "Reset Your Password",
+      html: emailHtml,
+    });
+
+    record.Otp = OTP
+    await record.save();
+    return successResponse(res, "Email has been sent to your registered email");
+
+  } catch (error) {
+    console.error("Error in forgot password process:", error);
+    // logger.error("Error in forgot password process:", error);
+    return errorResponse(res, "Failed to send email");
+  }
+}
+);
+
+exports.forgotpassword = catchAsync(async (req, res) => {
+  try {
+    const { Otp, newPassword } = req.body;
+    const user = await User.findOne({ Otp: Otp });
+    console.log("user", user)
+    if (!user) {
+      return errorResponse(res, "User not found", 404);
+    }
+    user.password = newPassword
+    await user.save();
+    return successResponse(res, "Password has been successfully reset");
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return errorResponse(res, "Token has expired. Please generate a new token.", 401);
+    }
+    console.error("Error in password reset process:", error);
+    // logger.error("Error in password reset process:", error);
+    return errorResponse(res, "Failed to reset password");
+  }
+}
+);
