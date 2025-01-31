@@ -143,7 +143,6 @@ exports.updateShipment = catchAsync(async (req, res) => {
   }
 });
 
-
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
     const shipment = await Shipment.findByIdAndDelete(req.params.id);
