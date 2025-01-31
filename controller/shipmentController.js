@@ -144,7 +144,6 @@ exports.updateShipment = catchAsync(async (req, res) => {
   }
 });
 
-
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
     const notificationdata = await notification.findOneAndDelete({ ShipmentId: req.params.id });
@@ -191,6 +190,18 @@ exports.getShipment = catchAsync(async (req, res) => {
 exports.getShipmentofBroker = catchAsync(async (req, res) => {
   try {
     const shipment = await Shipment.find({ broker_id: req.user.id });
+    if (!shipment) {
+      return errorResponse(res, "No data found", 404);
+    }
+    return successResponse(res, "Shipment fetched successfully", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.getShipmentofCarrier = catchAsync(async (req, res) => {
+  try {
+    const shipment = await Shipment.find({ carrier_id: req.user.id });
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
