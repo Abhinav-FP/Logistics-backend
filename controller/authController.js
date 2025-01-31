@@ -350,7 +350,11 @@ exports.getCarrier = catchAsync(async (req, res) => {
 
 exports.getDriver = catchAsync(async (req, res) => {
   try {
-    const drivers = await Driver.find().select("-password").populate("driver_id_ref");
+    // const drivers = await Driver.find().populate("driver_id_ref");
+    const drivers = await Driver.find().populate(
+      "driver_id_ref",
+      "-password -__v -created_at -updated_at"
+    );
     if (!drivers) {
       return errorResponse(res, "No data found", 404);
     }
@@ -426,7 +430,7 @@ exports.createNotification = catchAsync(async (req, res) => {
 });
 exports.updateNotification = catchAsync(async (req, res) => {
   try {
-    const { senderId, receiverShipperId, receiverCustomerId, receiverBrokerId, receiverCarrierId, ShipmentId } = req.body;
+    const { senderId, receiverShipperId, receiverCustomerId, receiverBrokerId, receiverCarrierId, ShipmentId, receiverDriverId } = req.body;
 
     const formatToArray = (value) => (Array.isArray(value) ? value : [{ Receiver: value }]);
 
@@ -438,11 +442,12 @@ exports.updateNotification = catchAsync(async (req, res) => {
         receiverCustomerId: formatToArray(receiverCustomerId),
         receiverBrokerId: formatToArray(receiverBrokerId),
         receiverCarrierId: formatToArray(receiverCarrierId),
+        receiverDriverId: formatToArray(receiverDriverId),
+
         ShipmentId,
       },
       { new: true, runValidators: true }
     );
-
 
   } catch (error) {
     console.error(error);
@@ -662,7 +667,6 @@ exports.forgotpassword = catchAsync(async (req, res) => {
   try {
     const { Otp, newPassword } = req.body;
     const user = await User.findOne({ Otp: Otp });
-    console.log("user", user)
     if (!user) {
       return errorResponse(res, "User not found", 404);
     }
@@ -674,7 +678,6 @@ exports.forgotpassword = catchAsync(async (req, res) => {
       return errorResponse(res, "Token has expired. Please generate a new token.", 401);
     }
     console.error("Error in password reset process:", error);
-    // logger.error("Error in password reset process:", error);
     return errorResponse(res, "Failed to reset password");
   }
 }
