@@ -61,6 +61,7 @@ exports.login = catchAsync(async (req, res) => {
     }
 
     const user = await User.findOne({ email });
+
     if (!user) {
       return errorResponse(res, "User not found", 404, "false");
     }
@@ -75,11 +76,13 @@ exports.login = catchAsync(async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || "24h" }
     );
 
+    const userObject = user.toObject();
+    delete userObject.password;
     return res.status(200).json({
       status: true,
       message: "Login successful",
       token,
-      user: user,
+      user: userObject,
     });
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
