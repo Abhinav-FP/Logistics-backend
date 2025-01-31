@@ -641,8 +641,6 @@ exports.forgotlinkrecord = catchAsync(async (req, res) => {
       },
     });
     const emailHtml = Otp(OTP, customerUser);
-
-
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: record.email,
