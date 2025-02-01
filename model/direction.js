@@ -45,7 +45,7 @@ const directionsSchema = mongoose.Schema({
             type: String,
             required: true
         },
-        startToEndPolyline: {
+        CurrentPolyline: {
             type: String,
             required: true
         },

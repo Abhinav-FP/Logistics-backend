@@ -26,9 +26,7 @@ router.post("/read-notification", verifyToken, MarkNotificationAsRead);
 
 router.get("/dashboard", DashboardApi);
 
-router.post("/forget_Email" , forgotlinkrecord);
 
-router.post("/forget_password" , forgotpassword)
 
 
 

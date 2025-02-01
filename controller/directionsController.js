@@ -4,7 +4,7 @@ const catchAsync = require("../utils/catchAsync")
 
 exports.AddDirection = catchAsync(
     async (req, res) => {
-        let { StartLocation, EndLocation, CurrentLocation } = req.body;
+        let { StartLocation, EndLocation, CurrentLocation  ,Shipment_id } = req.body;
 
 
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
@@ -68,7 +68,7 @@ exports.AddDirection = catchAsync(
                         lng: CurrentLocation.lng,
                         distination: StartToCurrentLeg.distance.text,
                         duration: StartToCurrentLeg.duration.text,
-                        startToEndPolyline: StartToCurrentResponse.data.routes[0].overview_polyline.points,
+                        CurrentPolyline: StartToCurrentResponse.data.routes[0].overview_polyline.points,
                     },
                     EndLocation: {
                         lat: EndLocation.lat,
@@ -78,6 +78,7 @@ exports.AddDirection = catchAsync(
                         startToEndPolyline: currentToEndResponse.data.routes[0].overview_polyline.points,
                     },
                     routeDetails,
+                    Shipment_id
                 });
 
                 const data = await result.save();
@@ -130,8 +131,7 @@ exports.getDirectionByUuid = catchAsync(async (req, res) => {
     }
 });
 
-exports.updateDirections = catchAsync(
-    async (req, res) => {
+exports.updateDirections = catchAsync(async (req, res) => {
         let { Shipment_id, CurrentLocation } = req.body;
         try {
             const parseLocation = (location) => {
@@ -200,7 +200,7 @@ exports.updateDirections = catchAsync(
                                 lng: CurrentLocation.lng,
                                 distination: StartToCurrentLeg.distance.text,
                                 duration: StartToCurrentLeg.duration.text,
-                                startToEndPolyline: StartToCurrentResponse.data.routes[0].overview_polyline.points,
+                                CurrentPolyline: StartToCurrentResponse.data.routes[0].overview_polyline.points,
                                 created_at: new Date(),
                             },
                         },

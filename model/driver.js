@@ -14,6 +14,10 @@ const driverSchema = new mongoose.Schema({
     type: String,
     required: [true, "VIN number is required"],
   },
+  trucktype: {
+    type: String,
+    required: [true, "trucktype number is required"],
+  },
 });
 
 const Driver = mongoose.model("Driver", driverSchema);

@@ -18,6 +18,7 @@ const corsOptions = {
 const UserRoute = require("./route/userRoutes");
 const ShipmentRoute = require("./route/shipmentRoutes");
 const PlaceRoute = require("./route/directionRoutes");
+const Approute =require("./route/AppRoute")
 
 
 app.use(cors(corsOptions));
@@ -27,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/user", UserRoute);
 app.use("/shipment", ShipmentRoute);
 app.use("/place" ,PlaceRoute)
-
+app.use("/app" , Approute)
 
 const PORT = process.env.REACT_APP_SERVER_DOMIN;
 

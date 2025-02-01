@@ -8,8 +8,7 @@ const { validationErrorResponse, errorResponse, successResponse } = require("../
 const catchAsync = require("../utils/catchAsync");
 const NotificationModel = require("../model/Notification");
 const shipment = require("../model/shipment");
-const Otp = require("../Email/Otp");
-const nodemailer = require('nodemailer');
+
 
 exports.signup = catchAsync(async (req, res) => {
   try {
@@ -431,31 +430,52 @@ exports.createNotification = catchAsync(async (req, res) => {
 
   }
 });
+
+
+
 exports.updateNotification = catchAsync(async (req, res) => {
   try {
-    const { senderId, receiverShipperId, receiverCustomerId, receiverBrokerId, receiverCarrierId, ShipmentId, receiverDriverId } = req.body;
+    const { senderId, receiverCarrierId, ShipmentId, receiverDriverId } = req.body;
 
     const formatToArray = (value) => (Array.isArray(value) ? value : [{ Receiver: value }]);
 
-    const updatedNotification = await NotificationModel.findOneAndUpdate(
-      { ShipmentId },
-      {
-        senderId,
-        receiverShipperId,
-        receiverCustomerId: formatToArray(receiverCustomerId),
-        receiverBrokerId: formatToArray(receiverBrokerId),
-        receiverCarrierId: formatToArray(receiverCarrierId),
-        receiverDriverId: formatToArray(receiverDriverId),
+    const existingNotification = await NotificationModel.findOne({ ShipmentId });
+    if (existingNotification) {
+      const newCarrierIds = formatToArray(receiverCarrierId);
+      const newDriverIds = formatToArray(receiverDriverId);
 
-        ShipmentId,
-      },
-      { new: true, runValidators: true }
-    );
+      // Avoid duplicates by filtering out existing IDs
+      existingNotification.receiverCarrierId = [
+        ...existingNotification.receiverCarrierId,
+        ...newCarrierIds.filter(newId =>
+          newId.Receiver && !existingNotification.receiverCarrierId.some(existingId =>
+            existingId.Receiver && existingId.Receiver.toString() === newId.Receiver.toString()
+          )
+        )
+      ];
 
+      existingNotification.receiverDriverId = [
+        ...existingNotification.receiverDriverId,
+        ...newDriverIds.filter(newId =>
+          newId.Receiver && !existingNotification.receiverDriverId.some(existingId =>
+            existingId.Receiver && existingId.Receiver.toString() === newId.Receiver.toString()
+          )
+        )
+      ];
+
+      existingNotification.ShipmentId = ShipmentId;
+
+      const updatedNotification = await existingNotification.save();
+
+    }
   } catch (error) {
     console.error(error);
+
   }
 });
+
+
+
 
 exports.NotificationGet = catchAsync(async (req, res) => {
   const UserId = req.user.id;
@@ -475,11 +495,13 @@ exports.NotificationGet = catchAsync(async (req, res) => {
             { "receiverShipperId.IsRead": false, "receiverShipperId.Receiver": UserId },
             { "receiverCustomerId.IsRead": false, "receiverCustomerId.Receiver": UserId },
             { "receiverBrokerId.IsRead": false, "receiverBrokerId.Receiver": UserId },
-            { "receiverCarrierId.IsRead": false, "receiverCarrierId.Receiver": UserId }
+            { "receiverCarrierId.IsRead": false, "receiverCarrierId.Receiver": UserId },
+
           ]
         }
       ]
     };
+
 
     const notification = await NotificationModel.find(query).sort({ createdAt: -1 })
       .populate("ShipmentId")
@@ -489,9 +511,7 @@ exports.NotificationGet = catchAsync(async (req, res) => {
       .populate("receiverBrokerId.Receiver", "-password")
       .populate("receiverCarrierId.Receiver", "-password");
 
-
     const notificationCount = notification.length;
-
     res.json({
       status: true,
       data: notification,
@@ -615,71 +635,3 @@ exports.DashboardApi = catchAsync(async (req, res) => {
 })
 
 
-// Forget Password 
-
-function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
-}
-
-
-exports.forgotlinkrecord = catchAsync(async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return validationErrorResponse(res, { email: 'Email is required' });
-    }
-    const record = await User.findOne({ email: email });
-    if (!record) {
-      return errorResponse(res, "No user found with this email", 404);
-    }
-    const customerUser = record.name;
-    const OTP = generateOTP();
-    let transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    const emailHtml = Otp(OTP, customerUser);
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: record.email,
-      OTP: OTP,
-      subject: "Reset Your Password",
-      html: emailHtml,
-    });
-
-    record.Otp = OTP
-    await record.save();
-    return successResponse(res, "Email has been sent to your registered email");
-
-  } catch (error) {
-    console.error("Error in forgot password process:", error);
-    // logger.error("Error in forgot password process:", error);
-    return errorResponse(res, "Failed to send email");
-  }
-}
-);
-
-exports.forgotpassword = catchAsync(async (req, res) => {
-  try {
-    const { Otp, newPassword } = req.body;
-    const user = await User.findOne({ Otp: Otp });
-    if (!user) {
-      return errorResponse(res, "User not found", 404);
-    }
-    user.password = newPassword
-    await user.save();
-    return successResponse(res, "Password has been successfully reset");
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return errorResponse(res, "Token has expired. Please generate a new token.", 401);
-    }
-    console.error("Error in password reset process:", error);
-    return errorResponse(res, "Failed to reset password");
-  }
-}
-);
