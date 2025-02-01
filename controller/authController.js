@@ -501,8 +501,6 @@ exports.NotificationGet = catchAsync(async (req, res) => {
         }
       ]
     };
-
-
     const notification = await NotificationModel.find(query).sort({ createdAt: -1 })
       .populate("ShipmentId")
       .populate("senderId", "-password")
@@ -510,7 +508,6 @@ exports.NotificationGet = catchAsync(async (req, res) => {
       .populate("receiverCustomerId.Receiver", "-password")
       .populate("receiverBrokerId.Receiver", "-password")
       .populate("receiverCarrierId.Receiver", "-password");
-
     const notificationCount = notification.length;
     res.json({
       status: true,
