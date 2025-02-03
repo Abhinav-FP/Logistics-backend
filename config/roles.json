@@ -42,6 +42,13 @@
           "read_record",
           "view-shipment"
         ]
+      },
+      {
+        "name": "customer",
+        "permissions": [
+          "read_record",
+          "view-shipment"
+        ]
       }
     ]
   }

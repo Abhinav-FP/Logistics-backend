@@ -212,6 +212,20 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
   }
 });
 
+exports.getShipmentofCustomer = catchAsync(async (req, res) => {
+  try {
+    const shipment = await Shipment.find({ customer_id: req.user.id }).populate(
+      { path: "customer_id", select: "name email" }
+    );
+    if (!shipment) {
+      return errorResponse(res, "No data found", 404);
+    }
+    return successResponse(res, "Shipment fetched successfully", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
 exports.getBOL = catchAsync(async (req, res) => {
   try {
     // Random data
