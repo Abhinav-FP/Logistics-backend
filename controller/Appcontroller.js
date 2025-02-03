@@ -10,8 +10,6 @@ function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
 }
 
-
-
 exports.UpdateDriver = catchAsync(async (req, res) => {
     try {
         const { vin, address, trucktype } = req.body;
