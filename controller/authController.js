@@ -625,10 +625,10 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
   }
 });
 
-exports.updateStatusNotification = catchAsync( async (req, res) => {
+exports.updateStatusNotification = catchAsync(async (req, res) => {
   const { ShipmentId, receiverCustomerId, receiverBrokerId } = req.body;
   try {
-    const existingNotification = await NotificationModel.findOne({ ShipmentId  :ShipmentId });
+    const existingNotification = await NotificationModel.findOne({ ShipmentId: ShipmentId });
     const result = await NotificationModel.findOneAndUpdate(existingNotification._id, {
       $set: {
         'receiverCustomerId': [{ Receiver: receiverCustomerId, IsRead: false }],

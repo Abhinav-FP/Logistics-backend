@@ -1,11 +1,11 @@
 const PDFDocument = require('pdfkit');
 const pdf = require("html-pdf-node");
 const Shipment = require("../model/shipment");
-const { validationErrorResponse, errorResponse,successResponse,} = require("../utils/ErrorHandling");
+const { validationErrorResponse, errorResponse, successResponse, } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
-const notification  = require("../model/Notification")
+const notification = require("../model/Notification")
 const BOL = require("../Email/bol.js");
-const { createNotification, updateNotification ,updateStatusNotification } = require('./authController'); // Import the Notification function
+const { createNotification, updateNotification, updateStatusNotification } = require('./authController'); // Import the Notification function
 // const puppeteer = require('puppeteer');
 // var Promise = require('bluebird');
 // const hb = require('handlebars');
@@ -102,7 +102,7 @@ exports.createShipment = catchAsync(async (req, res) => {
         ShipmentId: shipment._id,
       },
     });
-    
+
     return successResponse(
       res,
       "Shipment created successfully",
@@ -144,7 +144,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
       body: {
         senderId: shipment.shipper_id,
         ShipmentId: shipment._id,
-        receiverCarrierId : updateData.carrier_id ,
+        receiverCarrierId: updateData.carrier_id,
         receiverDriverId: updateData.driver_id,
         ShipmentId: shipment._id,
       },
@@ -183,12 +183,12 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
     const notificationdata = await notification.findOneAndDelete({ ShipmentId: req.params.id });
-    if ( !notificationdata) {
+    if (!notificationdata) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
     const shipment = await Shipment.findByIdAndDelete(req.params.id);
 
-    if (!shipment ) {
+    if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
 
@@ -204,12 +204,12 @@ exports.getShipment = catchAsync(async (req, res) => {
     const query = id ? { _id: id } : {};
     const shipment = await Shipment.find(query).populate([
       { path: "broker_id", select: "name email" },
-      { path: "shipper_id", select: "name email"},
-      { path: "customer_id", select:"name email" },
+      { path: "shipper_id", select: "name email" },
+      { path: "customer_id", select: "name email" },
       { path: "driver_id", select: "name email" },
       { path: "carrier_id", select: "name email" }
     ]);
-    
+
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
