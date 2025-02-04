@@ -16,7 +16,7 @@ const driverSchema = new mongoose.Schema({
   },
   trucktype: {
     type: String,
-    required: [true, "trucktype number is required"],
+    default : null
   },
 });
 

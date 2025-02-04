@@ -4,8 +4,8 @@ const Shipment = require("../model/shipment");
 const { validationErrorResponse, errorResponse,successResponse,} = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 const notification  = require("../model/Notification")
-const { createNotification, updateNotification ,updateDriverNotification } = require('./authController'); // Import the Notification function
 const BOL = require("../Email/bol.js");
+const { createNotification, updateNotification ,updateStatusNotification } = require('./authController'); // Import the Notification function
 // const puppeteer = require('puppeteer');
 // var Promise = require('bluebird');
 // const hb = require('handlebars');
@@ -131,8 +131,19 @@ exports.updateShipment = catchAsync(async (req, res) => {
     if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
+    await updateStatusNotification({
+      body: {
+        senderId: shipment.shipper_id,
+        receiverBrokerId: updateData.broker_id,
+        receiverCustomerId: updateData.customer_id,
+        ShipmentId: shipment._id,
+        status: false,
+      },
+    })
     await updateNotification({
       body: {
+        senderId: shipment.shipper_id,
+        ShipmentId: shipment._id,
         receiverCarrierId : updateData.carrier_id ,
         receiverDriverId: updateData.driver_id,
         ShipmentId: shipment._id,

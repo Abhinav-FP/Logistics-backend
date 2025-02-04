@@ -8,7 +8,7 @@ const { validationErrorResponse, errorResponse, successResponse } = require("../
 const catchAsync = require("../utils/catchAsync");
 const NotificationModel = require("../model/Notification");
 const shipment = require("../model/shipment");
-
+const ObjectId = require('mongoose').Types.ObjectId; // Import ObjectId from mongoose
 
 exports.signup = catchAsync(async (req, res) => {
   try {
@@ -424,7 +424,6 @@ exports.createNotification = catchAsync(async (req, res) => {
     });
     const data = await record.save();
 
-
   } catch (error) {
     console.error(error);
 
@@ -473,6 +472,9 @@ exports.updateNotification = catchAsync(async (req, res) => {
 
   }
 });
+
+
+
 
 
 
@@ -597,6 +599,25 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     });
   }
 });
+
+
+exports.updateStatusNotification = catchAsync( async (req, res) => {
+  const { ShipmentId, receiverCustomerId, receiverBrokerId } = req.body;
+  console.log("req.body",req.body)
+  try {
+    const existingNotification = await NotificationModel.findOne({ ShipmentId  :ShipmentId });
+    const result = await NotificationModel.findOneAndUpdate(existingNotification._id, {
+      $set: {
+        'receiverCustomerId': [{ Receiver: receiverCustomerId, IsRead: false }],
+        'receiverBrokerId': [{ Receiver: receiverBrokerId, IsRead: false }],
+      }
+    }, { new: true });
+console.log("result" ,result)
+  } catch (error) {
+    console.log("eror" ,error)
+  }
+});
+
 
 
 

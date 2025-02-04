@@ -83,6 +83,15 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     required: [true, "Type of goods is required"],
   },
+  user_sign :{
+    type: String,
+    default :null
+    
+  },
+  driver_sign:{
+    type: String,
+    default :null
+  },
   created_at: {
     type: Date,
     default: Date.now,
