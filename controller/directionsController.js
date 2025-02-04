@@ -82,7 +82,6 @@ exports.AddDirection = catchAsync(
                 });
 
                 const data = await result.save();
-                console.log("Data saved successfully:", data);
                 res.json({
                     success: true,
                     message: "Success",

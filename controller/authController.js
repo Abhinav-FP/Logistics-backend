@@ -474,11 +474,6 @@ exports.updateNotification = catchAsync(async (req, res) => {
 });
 
 
-
-
-
-
-
 exports.NotificationGet = catchAsync(async (req, res) => {
   const UserId = req.user.id;
   try {
@@ -600,10 +595,8 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
   }
 });
 
-
 exports.updateStatusNotification = catchAsync( async (req, res) => {
   const { ShipmentId, receiverCustomerId, receiverBrokerId } = req.body;
-  console.log("req.body",req.body)
   try {
     const existingNotification = await NotificationModel.findOne({ ShipmentId  :ShipmentId });
     const result = await NotificationModel.findOneAndUpdate(existingNotification._id, {
@@ -612,14 +605,10 @@ exports.updateStatusNotification = catchAsync( async (req, res) => {
         'receiverBrokerId': [{ Receiver: receiverBrokerId, IsRead: false }],
       }
     }, { new: true });
-console.log("result" ,result)
   } catch (error) {
     console.log("eror" ,error)
   }
 });
-
-
-
 
 // DashboardApi 
 
