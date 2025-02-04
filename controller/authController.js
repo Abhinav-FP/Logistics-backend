@@ -4,11 +4,15 @@ const Customer = require("../model/customer");
 const Driver = require("../model/driver");
 const generator = require("generate-password");
 const jwt = require("jsonwebtoken");
-const { validationErrorResponse, errorResponse, successResponse } = require("../utils/ErrorHandling");
+const {
+  validationErrorResponse,
+  errorResponse,
+  successResponse,
+} = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 const NotificationModel = require("../model/Notification");
 const shipment = require("../model/shipment");
-const ObjectId = require('mongoose').Types.ObjectId; // Import ObjectId from mongoose
+const ObjectId = require("mongoose").Types.ObjectId; // Import ObjectId from mongoose
 
 exports.signup = catchAsync(async (req, res) => {
   try {
@@ -18,7 +22,6 @@ exports.signup = catchAsync(async (req, res) => {
     if ((!email, !password, !role)) {
       return errorResponse(res, "All fields are required", 401, "false");
     }
-
 
     // Create new user record
     const record = new User({
@@ -340,7 +343,9 @@ exports.createDriver = catchAsync(async (req, res) => {
 
 exports.getCarrier = catchAsync(async (req, res) => {
   try {
-    const carriers = await Carrier.find().select("-password").populate("career_id_ref");
+    const carriers = await Carrier.find()
+      .select("-password")
+      .populate("career_id_ref");
     if (!carriers) {
       return errorResponse(res, "No users found", 404);
     }
@@ -387,10 +392,14 @@ exports.profilegettoken = catchAsync(async (req, res, next) => {
   try {
     const id = req?.user?.id;
     if (!id) {
-      return errorResponse(res, "User is not authorized or Token is missing", 401);
+      return errorResponse(
+        res,
+        "User is not authorized or Token is missing",
+        401
+      );
     }
 
-    const userprofile = await User.findById(id).select('email role');
+    const userprofile = await User.findById(id).select("email role");
     if (!userprofile) {
       return errorResponse(res, "User profile not found", 404);
     }
@@ -400,45 +409,47 @@ exports.profilegettoken = catchAsync(async (req, res, next) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-// Notification System Management 
+// Notification System Management
 
 exports.createNotification = catchAsync(async (req, res) => {
   try {
-    const { senderId, receiverShipperId, receiverCustomerId, receiverBrokerId, receiverCarrierId, ShipmentId } = req.body;
+    const {
+      senderId,
+      receiverShipperId,
+      receiverCustomerId,
+      receiverBrokerId,
+      receiverCarrierId,
+      ShipmentId,
+    } = req.body;
     const record = new NotificationModel({
       senderId,
       receiverShipperId,
-      receiverCustomerId: receiverCustomerId.map(obj => ({ Receiver: obj.Receiver })),
-      receiverBrokerId: receiverBrokerId.map(obj => ({ Receiver: obj.Receiver })),
+      receiverCustomerId: receiverCustomerId.map((obj) => ({
+        Receiver: obj.Receiver,
+      })),
+      receiverBrokerId: receiverBrokerId.map((obj) => ({
+        Receiver: obj.Receiver,
+      })),
       receiverCarrierId,
       ShipmentId,
     });
     const data = await record.save();
-
   } catch (error) {
     console.error(error);
-
   }
 });
 
-
-
 exports.updateNotification = catchAsync(async (req, res) => {
   try {
-    const { senderId, receiverCarrierId, ShipmentId, receiverDriverId } = req.body;
+    const { senderId, receiverCarrierId, ShipmentId, receiverDriverId } =
+      req.body;
 
-    const formatToArray = (value) => (Array.isArray(value) ? value : [{ Receiver: value }]);
+    const formatToArray = (value) =>
+      Array.isArray(value) ? value : [{ Receiver: value }];
 
-    const existingNotification = await NotificationModel.findOne({ ShipmentId });
+    const existingNotification = await NotificationModel.findOne({
+      ShipmentId,
+    });
     if (existingNotification) {
       const newCarrierIds = formatToArray(receiverCarrierId);
       const newDriverIds = formatToArray(receiverDriverId);
@@ -446,38 +457,38 @@ exports.updateNotification = catchAsync(async (req, res) => {
       // Avoid duplicates by filtering out existing IDs
       existingNotification.receiverCarrierId = [
         ...existingNotification.receiverCarrierId,
-        ...newCarrierIds.filter(newId =>
-          newId.Receiver && !existingNotification.receiverCarrierId.some(existingId =>
-            existingId.Receiver && existingId.Receiver.toString() === newId.Receiver.toString()
-          )
-        )
+        ...newCarrierIds.filter(
+          (newId) =>
+            newId.Receiver &&
+            !existingNotification.receiverCarrierId.some(
+              (existingId) =>
+                existingId.Receiver &&
+                existingId.Receiver.toString() === newId.Receiver.toString()
+            )
+        ),
       ];
 
       existingNotification.receiverDriverId = [
         ...existingNotification.receiverDriverId,
-        ...newDriverIds.filter(newId =>
-          newId.Receiver && !existingNotification.receiverDriverId.some(existingId =>
-            existingId.Receiver && existingId.Receiver.toString() === newId.Receiver.toString()
-          )
-        )
+        ...newDriverIds.filter(
+          (newId) =>
+            newId.Receiver &&
+            !existingNotification.receiverDriverId.some(
+              (existingId) =>
+                existingId.Receiver &&
+                existingId.Receiver.toString() === newId.Receiver.toString()
+            )
+        ),
       ];
 
       existingNotification.ShipmentId = ShipmentId;
 
       const updatedNotification = await existingNotification.save();
-
     }
   } catch (error) {
     console.error(error);
-
   }
 });
-
-
-
-
-
-
 
 exports.NotificationGet = catchAsync(async (req, res) => {
   const UserId = req.user.id;
@@ -489,21 +500,33 @@ exports.NotificationGet = catchAsync(async (req, res) => {
             { "receiverShipperId.Receiver": UserId },
             { "receiverCustomerId.Receiver": UserId },
             { "receiverBrokerId.Receiver": UserId },
-            { "receiverCarrierId.Receiver": UserId }
-          ]
+            { "receiverCarrierId.Receiver": UserId },
+          ],
         },
         {
           $or: [
-            { "receiverShipperId.IsRead": false, "receiverShipperId.Receiver": UserId },
-            { "receiverCustomerId.IsRead": false, "receiverCustomerId.Receiver": UserId },
-            { "receiverBrokerId.IsRead": false, "receiverBrokerId.Receiver": UserId },
-            { "receiverCarrierId.IsRead": false, "receiverCarrierId.Receiver": UserId },
-
-          ]
-        }
-      ]
+            {
+              "receiverShipperId.IsRead": false,
+              "receiverShipperId.Receiver": UserId,
+            },
+            {
+              "receiverCustomerId.IsRead": false,
+              "receiverCustomerId.Receiver": UserId,
+            },
+            {
+              "receiverBrokerId.IsRead": false,
+              "receiverBrokerId.Receiver": UserId,
+            },
+            {
+              "receiverCarrierId.IsRead": false,
+              "receiverCarrierId.Receiver": UserId,
+            },
+          ],
+        },
+      ],
     };
-    const notification = await NotificationModel.find(query).sort({ createdAt: -1 })
+    const notification = await NotificationModel.find(query)
+      .sort({ createdAt: -1 })
       .populate("ShipmentId")
       .populate("senderId", "-password")
       .populate("receiverShipperId.Receiver", "-password")
@@ -515,13 +538,13 @@ exports.NotificationGet = catchAsync(async (req, res) => {
       status: true,
       data: notification,
       count: notificationCount,
-      message: 'Notifications fetched successfully',
+      message: "Notifications fetched successfully",
     });
   } catch (error) {
     console.error("Error:", error);
     res.json({
       status: false,
-      message: error.message || 'Failed to fetch notifications',
+      message: error.message || "Failed to fetch notifications",
     });
   }
 });
@@ -533,44 +556,46 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
   if (!UserId || !shipmentId) {
     return res.status(400).json({
       status: false,
-      message: 'UserId and ShipmentId are required',
+      message: "UserId and ShipmentId are required",
     });
   }
 
   try {
-    const notification = await NotificationModel.findOne({ ShipmentId: shipmentId });
+    const notification = await NotificationModel.findOne({
+      ShipmentId: shipmentId,
+    });
 
     if (!notification) {
       return res.status(404).json({
         status: false,
-        message: 'Notification not found',
+        message: "Notification not found",
       });
     }
 
     let updated = false;
 
-    notification.receiverShipperId.forEach(receiver => {
+    notification.receiverShipperId.forEach((receiver) => {
       if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
         receiver.IsRead = true;
         updated = true;
       }
     });
 
-    notification.receiverCustomerId.forEach(receiver => {
+    notification.receiverCustomerId.forEach((receiver) => {
       if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
         receiver.IsRead = true;
         updated = true;
       }
     });
 
-    notification.receiverBrokerId.forEach(receiver => {
+    notification.receiverBrokerId.forEach((receiver) => {
       if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
         receiver.IsRead = true;
         updated = true;
       }
     });
 
-    notification.receiverCarrierId.forEach(receiver => {
+    notification.receiverCarrierId.forEach((receiver) => {
       if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
         receiver.IsRead = true;
         updated = true;
@@ -580,7 +605,7 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     if (!updated) {
       return res.status(404).json({
         status: false,
-        message: 'UserId not found in any receivers',
+        message: "UserId not found in any receivers",
       });
     }
 
@@ -588,68 +613,115 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
 
     res.json({
       status: true,
-      message: 'Notification marked as read successfully',
+      message: "Notification marked as read successfully",
       notification: result,
     });
   } catch (error) {
     console.error("Error occurred:", error);
     res.status(500).json({
       status: false,
-      message: error.message || 'Failed to mark notification as read',
+      message: error.message || "Failed to mark notification as read",
     });
   }
 });
 
-
-exports.updateStatusNotification = catchAsync( async (req, res) => {
+exports.updateStatusNotification = catchAsync(async (req, res) => {
   const { ShipmentId, receiverCustomerId, receiverBrokerId } = req.body;
-  console.log("req.body",req.body)
+  console.log("req.body", req.body);
   try {
-    const existingNotification = await NotificationModel.findOne({ ShipmentId  :ShipmentId });
-    const result = await NotificationModel.findOneAndUpdate(existingNotification._id, {
-      $set: {
-        'receiverCustomerId': [{ Receiver: receiverCustomerId, IsRead: false }],
-        'receiverBrokerId': [{ Receiver: receiverBrokerId, IsRead: false }],
-      }
-    }, { new: true });
-console.log("result" ,result)
+    const existingNotification = await NotificationModel.findOne({
+      ShipmentId: ShipmentId,
+    });
+    const result = await NotificationModel.findOneAndUpdate(
+      existingNotification._id,
+      {
+        $set: {
+          receiverCustomerId: [{ Receiver: receiverCustomerId, IsRead: false }],
+          receiverBrokerId: [{ Receiver: receiverBrokerId, IsRead: false }],
+        },
+      },
+      { new: true }
+    );
+    console.log("result", result);
   } catch (error) {
-    console.log("eror" ,error)
+    console.log("eror", error);
   }
 });
 
-
-
-
-// DashboardApi 
-
-
-exports.DashboardApi = catchAsync(async (req, res) => {
+// Shipper dashboard
+exports.DashboardShipperApi = catchAsync(async (req, res) => {
   try {
-    const Users = await User.countDocuments({});
-    const Shipment = await shipment.countDocuments({});
-    const PendingShipment = await shipment.find({ status: "pending" }).countDocuments();
-    const transitShipment = await shipment.find({ status: "transit" }).countDocuments();
-    const deliveredShipment = await shipment.find({ status: "delivered" }).countDocuments();
-    const PayOnDeliveryShipment = await shipment.find({ paymentStatus: "PayOnDelivery" }).countDocuments();
-    const DonePayShipment = await shipment.find({ paymentStatus: "Done" }).countDocuments();
-    const ShimentData = await shipment.find({}).limit(5);
+    const Users = await User.aggregate([
+      { $group: { _id: "$role", count: { $sum: 1 } } },
+    ]);
+    const Shipment = await shipment.countDocuments({ shipper_id: req.user.id });
+    const statusCounts = await shipment.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+    // console.log("req.user",req.user);
+    const ShipmentData = await shipment
+      .find({ shipper_id: req.user.id })
+      .populate([
+        { path: "broker_id", select: "name email" },
+        { path: "shipper_id", select: "name email" },
+        { path: "customer_id", select: "name email" },
+        { path: "driver_id", select: "name email" },
+        { path: "carrier_id", select: "name email" },
+      ])
+      .limit(5);
     res.json({
       status: true,
       message: "Dashboard fetched successfully",
-      Users,
-      Shipment,
-      PendingShipment,
-      deliveredShipment,
-      transitShipment,
-      PayOnDeliveryShipment,
-      DonePayShipment,
-      ShimentData
-    })
+      data: { Users, Shipment, statusCounts, ShipmentData },
+    });
   } catch (error) {
     console.error("Error occurred:", error);
     errorResponse(res, error.message || "Failed to fetch profile", 500);
   }
-})
+});
 
+// Broker, carrier, driver dashboard
+exports.DashboardApi = catchAsync(async (req, res) => {
+  try {
+    const { user } = req;
+    console.log("req.user", user);
 
+    // Aggregate shipment statuses
+    const statusCounts = await shipment.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+
+    // Determine query filter based on user role
+    let filter = {};
+    if (user?.role === "broker") {
+      filter = { broker_id: user.id };
+    } else if (user?.role === "carrier") {
+      filter = { carrier_id: user.id };
+    } else {
+      filter = { driver_id: user.id };
+    }
+
+    // Fetch count and data in parallel
+    const [Shipment, ShipmentData] = await Promise.all([
+      shipment.countDocuments(filter),
+      shipment.find(filter)
+        .populate([
+          { path: "broker_id", select: "name email" },
+          { path: "shipper_id", select: "name email" },
+          { path: "customer_id", select: "name email" },
+          { path: "driver_id", select: "name email" },
+          { path: "carrier_id", select: "name email" },
+        ])
+        .limit(5),
+    ]);
+
+    res.json({
+      status: true,
+      message: "Dashboard fetched successfully",
+      data: { Shipment, statusCounts, ShipmentData },
+    });
+  } catch (error) {
+    console.error("Error occurred:", error);
+    errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+});
