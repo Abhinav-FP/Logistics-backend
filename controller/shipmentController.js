@@ -156,6 +156,30 @@ exports.updateShipment = catchAsync(async (req, res) => {
   }
 });
 
+exports.updateShipmentData = catchAsync(async (req, res) => {
+  try {
+    const updateData = req.body;
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return errorResponse(res, "No data provided to update", 400, false);
+    }
+    const shipment = await Shipment.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    if (!shipment) {
+      return errorResponse(res, "Shipment not found", 404, false);
+    }
+    return successResponse(res, "Shipment updated successfully", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
     const notificationdata = await notification.findOneAndDelete({ ShipmentId: req.params.id });
