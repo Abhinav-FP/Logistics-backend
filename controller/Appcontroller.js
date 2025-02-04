@@ -36,9 +36,9 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
     }
 });
 
-exports.GetDriver = catchAsync(async (req, res) => {
+exports.GetDrivers = catchAsync(async (req, res) => {
     try {
-        const { UserId } = req.user.id;
+        const UserId  = req.user.id;
         if (!UserId) {
             return errorResponse(res, "No users found", 404);
         }
@@ -47,7 +47,7 @@ exports.GetDriver = catchAsync(async (req, res) => {
             return errorResponse(res, "Driver already exists.", 400);
         }
         if (driverResult) {
-            successResponse(res, "Customer created successfully!", 201, {
+            successResponse(res, "Driver Get successful!", 201, {
                 driver: driverResult,
             });
         }
@@ -62,7 +62,13 @@ exports.GetDriver = catchAsync(async (req, res) => {
 exports.ShipmentGet = catchAsync(async (req, res) => {
     try {
         const { driver_id } = req.params;
-        const shipments = await shipment.find({ driver_id: driver_id });
+        const shipments = await shipment.find({ driver_id: driver_id }).populate([
+            { path: "broker_id", select: "name email" },
+            { path: "shipper_id", select: "name email"},
+            { path: "customer_id", select:"name email" },
+            { path: "driver_id", select: "name email" },
+            { path: "carrier_id", select: "name email" }
+          ]);
         if (!shipments) {
             return errorResponse(res, "Shipment not found", 404);
         }
