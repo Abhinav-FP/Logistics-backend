@@ -1,13 +1,14 @@
 const PDFDocument = require('pdfkit');
+const pdf = require("html-pdf-node");
 const Shipment = require("../model/shipment");
 const { validationErrorResponse, errorResponse,successResponse,} = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 const notification  = require("../model/Notification")
+const BOL = require("../Email/bol.js");
 const { createNotification, updateNotification ,updateStatusNotification } = require('./authController'); // Import the Notification function
 // const puppeteer = require('puppeteer');
 // var Promise = require('bluebird');
 // const hb = require('handlebars');
-// const BOL = require("../html/bol");
 
 // // PDF Generator function, edit it carefully
 // async function generatePdf(file, options, callback) {
@@ -246,82 +247,93 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
   }
 });
 
-// exports.getBOL = catchAsync(async (req, res) => {
-//   try {
-//     // const doc = new PDFDocument();
+exports.getShipmentofCustomer = catchAsync(async (req, res) => {
+  try {
+    const shipment = await Shipment.find({ customer_id: req.user.id }).populate(
+      { path: "customer_id", select: "name email" }
+    );
+    if (!shipment) {
+      return errorResponse(res, "No data found", 404);
+    }
+    return successResponse(res, "Shipment fetched successfully", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
 
-//     // // Set headers for the PDF response
-//     // res.setHeader('Content-Type', 'application/pdf');
-//     // res.setHeader('Content-Disposition', 'attachment; filename="random.pdf"');
+exports.getBOL = catchAsync(async (req, res) => {
+  try {
+    // Random data
+    const name = "John Doe";
+    const description = "Fragile electronics package, handle with care.";
+    const pickup_location = "New York, USA";
+    const drop_location = "Los Angeles, USA";
+    const current_location = "Chicago, USA";
+    const customer_id = "1234567890abcdef12345678";
+    const status = "transit";
+    const shipper_id = "abcdef1234567890abcdef12";
+    const broker_id = "7890abcdef1234567890abcd";
+    const carrier_id = "4567890abcdef123456789abc";
+    const driver_id = "abcdef78901234567890abcd";
+    const shippingDate = "2025-01-15";
+    const deliveryDateExpect = "2025-01-20";
+    const cost = 2500;
+    const paymentStatus = "paid";
+    const quantity = 10;
+    const weight = 25.5; // in kilograms
+    const dimensions = "50x40x30"; // length x width x height in cm
+    const typeOfGoods = "Electronics";
 
-//     // // Pipe the PDF directly to the response
-//     // doc.pipe(res);
+    const BOLHTML = BOL(
+      name,
+      description,
+      pickup_location,
+      drop_location,
+      current_location,
+      customer_id,
+      status,
+      shipper_id,
+      broker_id,
+      carrier_id,
+      driver_id,
+      shippingDate,
+      deliveryDateExpect,
+      cost,
+      paymentStatus,
+      quantity,
+      weight,
+      dimensions,
+      typeOfGoods
+    );
 
-//     // // Add content to the PDF
-//     // doc.fontSize(25).text('Bill of Lading (BOL)', {
-//     //   align: 'center',
-//     // });
+    const options1 = {
+      width: "800px",
+      height: "968.219px",
+      preferCSSPageSize: true,
+      printBackground: true,
+    };
+    const BOLfile = { content: BOLHTML };
 
-//     // doc.moveDown();
-//     // doc.fontSize(12).text('This is a randomly generated PDF for demonstration purposes.', {
-//     //   align: 'left',
-//     // });
+    let BOLpdf;
+    try {
+      BOLpdf = await pdf.generatePdf(BOLfile, options1);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).json({
+        status: false,
+        message: "Failed to generate PDF",
+      });
+    }
 
-//     // doc.moveDown();
-//     // doc.text(`Generated on: ${new Date().toLocaleString()}`);
+    // Set response headers for PDF download
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": "attachment; filename=BOL.pdf",
+      "Content-Length": BOLpdf.length,
+    });
 
-//     // // Finalize the PDF and end the response
-//     // doc.end();
-
-// // Random data
-//     const name = "John Doe";
-//     const description = "Fragile electronics package, handle with care.";
-//     const pickup_location = "New York, USA";
-//     const drop_location = "Los Angeles, USA";
-//     const current_location = "Chicago, USA";
-//     const customer_id = "1234567890abcdef12345678";
-//     const status = "transit";
-//     const shipper_id = "abcdef1234567890abcdef12";
-//     const broker_id = "7890abcdef1234567890abcd";
-//     const carrier_id = "4567890abcdef123456789abc";
-//     const driver_id = "abcdef78901234567890abcd";
-//     const shippingDate = "2025-01-15";
-//     const deliveryDateExpect = "2025-01-20";
-//     const cost = 2500;
-//     const paymentStatus = "paid";
-//     const quantity = 10;
-//     const weight = 25.5; // in kilograms
-//     const dimensions = "50x40x30"; // length x width x height in cm
-//     const typeOfGoods = "Electronics";
-    
-//     const BOLHTML = BOL(name,description,pickup_location,drop_location,current_location,customer_id,status,shipper_id,broker_id,carrier_id,driver_id,shippingDate,deliveryDateExpect,cost,paymentStatus,quantity,weight,dimensions,typeOfGoods);    
-
-//   const options1 = {
-//     width: "800px", // Custom width
-//     height: "968.219px", // Custom height
-//     preferCSSPageSize: true, // Uses CSS page size if defined in styles
-//     printBackground: true, // Ensures background colors and images are printed
-//   };
-//   const BOLfile = { content: BOLHTML };
-
-//   // Invoice
-//   let BOLpdf;
-//   try {
-//     BOLpdf = await generatePdf(BOLfile, options1);
-//   } catch (error) {
-//     console.log("error",error);
-//     logger.error("error",error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Failed to generate PDF",
-//     });
-//   }
-//   return res.status(200).json({
-//     status: true,
-//     message: "PDF generated successfully",
-//     data: BOLpdf,
-//   });
-//   } catch (error) {
-//     return errorResponse(res, error.message || 'Internal Server Error', 500);
-//   }
-// });
+    return res.send(BOLpdf);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});

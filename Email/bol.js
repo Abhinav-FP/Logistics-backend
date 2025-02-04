@@ -1,6 +1,27 @@
-module.exports = (otp, userName) => {
-	return ` 
-	<html>
+module.exports = ({
+  name,
+  description,
+  pickup_location,
+  drop_location,
+  current_location,
+  customer_id,
+  status,
+  shipper_id,
+  broker_id,
+  carrier_id,
+  driver_id,
+  shippingDate,
+  deliveryDateExpect,
+  cost,
+  paymentStatus,
+  quantity,
+  weight,
+  dimensions,
+  typeOfGoods,
+}) => {
+  return `
+     <!DOCTYPE html>
+ <html>
 <head>
 	<title>BOL</title>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -377,4 +398,5 @@ module.exports = (otp, userName) => {
 
 </body>
 </html>
-	`}
+      `;
+};
