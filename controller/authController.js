@@ -12,7 +12,7 @@ const {
 const catchAsync = require("../utils/catchAsync");
 const NotificationModel = require("../model/Notification");
 const shipment = require("../model/shipment");
-const ObjectId = require("mongoose").Types.ObjectId; // Import ObjectId from mongoose
+const mongoose = require("mongoose");
 
 exports.signup = catchAsync(async (req, res) => {
   try {
@@ -67,8 +67,13 @@ exports.login = catchAsync(async (req, res) => {
     if (!user) {
       return errorResponse(res, "User not found", 404, "false");
     }
-    if(user?.role === "driver"){
-      return errorResponse(res, "Drivers are not allowed to login on website", 401, "false");
+    if (user?.role === "driver") {
+      return errorResponse(
+        res,
+        "Drivers are not allowed to login on website",
+        401,
+        "false"
+      );
     }
 
     if (password != user.password) {
@@ -631,13 +636,19 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
 exports.updateStatusNotification = catchAsync(async (req, res) => {
   const { ShipmentId, receiverCustomerId, receiverBrokerId } = req.body;
   try {
-    const existingNotification = await NotificationModel.findOne({ ShipmentId: ShipmentId });
-    const result = await NotificationModel.findOneAndUpdate(existingNotification._id, {
-      $set: {
-        'receiverCustomerId': [{ Receiver: receiverCustomerId, IsRead: false }],
-        'receiverBrokerId': [{ Receiver: receiverBrokerId, IsRead: false }],
-      }
-    }, { new: true });
+    const existingNotification = await NotificationModel.findOne({
+      ShipmentId: ShipmentId,
+    });
+    const result = await NotificationModel.findOneAndUpdate(
+      existingNotification._id,
+      {
+        $set: {
+          receiverCustomerId: [{ Receiver: receiverCustomerId, IsRead: false }],
+          receiverBrokerId: [{ Receiver: receiverBrokerId, IsRead: false }],
+        },
+      },
+      { new: true }
+    );
   } catch (error) {
     console.log("eror", error);
   }
@@ -649,13 +660,19 @@ exports.DashboardShipperApi = catchAsync(async (req, res) => {
     const Users = await User.aggregate([
       { $group: { _id: "$role", count: { $sum: 1 } } },
     ]);
-    const Shipment = await shipment.countDocuments({ shipper_id: req.user.id });
+
+    // Ensure req.user.id is converted correctly to ObjectId
+    const shipperId = new mongoose.Types.ObjectId(req.user.id);
+
+    const Shipment = await shipment.countDocuments({ shipper_id: shipperId });
+
     const statusCounts = await shipment.aggregate([
+      { $match: { shipper_id: shipperId } },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
-    // console.log("req.user",req.user);
+
     const ShipmentData = await shipment
-      .find({ shipper_id: req.user.id })
+      .find({ shipper_id: shipperId })
       .populate([
         { path: "broker_id", select: "name email" },
         { path: "shipper_id", select: "name email" },
@@ -663,8 +680,9 @@ exports.DashboardShipperApi = catchAsync(async (req, res) => {
         { path: "driver_id", select: "name email" },
         { path: "carrier_id", select: "name email" },
       ])
-      .sort({ created_at: -1 }) // Correct sorting method
+      .sort({ created_at: -1 }) // Ensure created_at exists in schema
       .limit(5);
+
     res.json({
       status: true,
       message: "Dashboard fetched successfully",
@@ -682,25 +700,25 @@ exports.DashboardApi = catchAsync(async (req, res) => {
     const { user } = req;
     console.log("req.user", user);
 
-    // Aggregate shipment statuses
-    const statusCounts = await shipment.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-    ]);
-
-    // Determine query filter based on user role
+    const shipperId = new mongoose.Types.ObjectId(user.id);
     let filter = {};
     if (user?.role === "broker") {
-      filter = { broker_id: user.id };
+      filter = { broker_id: shipperId };
     } else if (user?.role === "carrier") {
-      filter = { carrier_id: user.id };
+      filter = { carrier_id: shipperId };
     } else {
-      filter = { driver_id: user.id };
+      filter = { driver_id: shipperId };
     }
 
     // Fetch count and data in parallel
-    const [Shipment, ShipmentData] = await Promise.all([
+    const [statusCounts, Shipment, ShipmentData] = await Promise.all([
+      shipment.aggregate([
+        { $match: filter },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
       shipment.countDocuments(filter),
-      shipment.find(filter)
+      shipment
+        .find(filter)
         .populate([
           { path: "broker_id", select: "name email" },
           { path: "shipper_id", select: "name email" },
@@ -708,6 +726,7 @@ exports.DashboardApi = catchAsync(async (req, res) => {
           { path: "driver_id", select: "name email" },
           { path: "carrier_id", select: "name email" },
         ])
+        .sort({ created_at: -1 })
         .limit(5),
     ]);
 
