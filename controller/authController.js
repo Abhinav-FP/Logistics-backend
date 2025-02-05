@@ -1,4 +1,5 @@
 const User = require("../model/user");
+const mongoose = require("mongoose");
 const Carrier = require("../model/carrier");
 const Customer = require("../model/customer");
 const Driver = require("../model/driver");
@@ -64,6 +65,14 @@ exports.login = catchAsync(async (req, res) => {
 
     if (!user) {
       return errorResponse(res, "Invalid username or password", 401);
+    }
+    if (user?.role === "driver") {
+      return errorResponse(
+        res,
+        "Drivers are not allowed to login on website",
+        401,
+        "false"
+      );
     }
 
     if (password != user.password) {
@@ -159,6 +168,132 @@ exports.createAccount = catchAsync(async (req, res) => {
   }
 });
 
+exports.getUsers = catchAsync(async (req, res) => {
+  try {
+    const { type } = req.params;
+
+    const query = type ? { role: type } : {};
+
+    const users = await User.find(query).select("-password");
+
+    if (!users) {
+      return errorResponse(res, "No users found", 404);
+    }
+    return successResponse(res, "Users fetched successfully", 200, users);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+exports.profilegettoken = catchAsync(async (req, res, next) => {
+  try {
+    const id = req?.user?.id;
+    if (!id) {
+      return errorResponse(
+        res,
+        "User is not authorized or Token is missing",
+        401
+      );
+    }
+
+    const userprofile = await User.findById(id).select("email role");
+    if (!userprofile) {
+      return errorResponse(res, "User profile not found", 404);
+    }
+    successResponse(res, "Profile retrieved successfully", 200, userprofile);
+  } catch (error) {
+    errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+});
+
+// Shipper dashboard
+exports.DashboardShipperApi = catchAsync(async (req, res) => {
+  try {
+    const Users = await User.aggregate([
+      { $group: { _id: "$role", count: { $sum: 1 } } },
+    ]);
+
+    // Ensure req.user.id is converted correctly to ObjectId
+    const shipperId = new mongoose.Types.ObjectId(req.user.id);
+
+    const Shipment = await shipment.countDocuments({ shipper_id: shipperId });
+
+    const statusCounts = await shipment.aggregate([
+      { $match: { shipper_id: shipperId } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+
+    const ShipmentData = await shipment
+      .find({ shipper_id: shipperId })
+      .populate([
+        { path: "broker_id", select: "name email" },
+        { path: "shipper_id", select: "name email" },
+        { path: "customer_id", select: "name email" },
+        { path: "driver_id", select: "name email" },
+        { path: "carrier_id", select: "name email" },
+      ])
+      .sort({ created_at: -1 }) // Ensure created_at exists in schema
+      .limit(5);
+
+    res.json({
+      status: true,
+      message: "Dashboard fetched successfully",
+      data: { Users, Shipment, statusCounts, ShipmentData },
+    });
+  } catch (error) {
+    console.error("Error occurred:", error);
+    errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+});
+
+// Broker, carrier, driver dashboard
+exports.DashboardApi = catchAsync(async (req, res) => {
+  try {
+    const { user } = req;
+    console.log("req.user", user);
+
+    const shipperId = new mongoose.Types.ObjectId(user.id);
+    let filter = {};
+    if (user?.role === "broker") {
+      filter = { broker_id: shipperId };
+    } else if (user?.role === "carrier") {
+      filter = { carrier_id: shipperId };
+    } else {
+      filter = { driver_id: shipperId };
+    }
+
+    // Fetch count and data in parallel
+    const [statusCounts, Shipment, ShipmentData] = await Promise.all([
+      shipment.aggregate([
+        { $match: filter },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      shipment.countDocuments(filter),
+      shipment
+        .find(filter)
+        .populate([
+          { path: "broker_id", select: "name email" },
+          { path: "shipper_id", select: "name email" },
+          { path: "customer_id", select: "name email" },
+          { path: "driver_id", select: "name email" },
+          { path: "carrier_id", select: "name email" },
+        ])
+        .sort({ created_at: -1 })
+        .limit(5),
+    ]);
+
+    res.json({
+      status: true,
+      message: "Dashboard fetched successfully",
+      data: { Shipment, statusCounts, ShipmentData },
+    });
+  } catch (error) {
+    console.error("Error occurred:", error);
+    errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+});
+
+// Carrier Panel 
 exports.createCarrier = catchAsync(async (req, res) => {
   try {
     const { name, email, role, contact } = req.body;
@@ -226,6 +361,21 @@ exports.createCarrier = catchAsync(async (req, res) => {
   }
 });
 
+exports.getCarrier = catchAsync(async (req, res) => {
+  try {
+    const carriers = await Carrier.find()
+      .select("-password")
+      .populate("career_id_ref");
+    if (!carriers) {
+      return errorResponse(res, "No users found", 404);
+    }
+    return successResponse(res, "Users fetched successfully", 200, carriers);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+// Customer Panel 
 exports.createCustomer = catchAsync(async (req, res) => {
   try {
     const { name, email, role, contact, address } = req.body;
@@ -283,6 +433,20 @@ exports.createCustomer = catchAsync(async (req, res) => {
   }
 });
 
+exports.GetCoustomer = catchAsync(async (req, res) => {
+  try {
+    const users = await Customer.find().populate("user_id_ref", "-password -__v -created_at -updated_at");
+    if (!users) {
+      return errorResponse(res, "No users found", 404);
+    }
+    return successResponse(res, "Users fetched successfully", 200, users);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
+// ?Driver
+
 exports.createDriver = catchAsync(async (req, res) => {
   try {
     const { name, email, role, contact, address, vin } = req.body;
@@ -339,20 +503,6 @@ exports.createDriver = catchAsync(async (req, res) => {
   }
 });
 
-exports.getCarrier = catchAsync(async (req, res) => {
-  try {
-    const carriers = await Carrier.find()
-      .select("-password")
-      .populate("career_id_ref");
-    if (!carriers) {
-      return errorResponse(res, "No users found", 404);
-    }
-    return successResponse(res, "Users fetched successfully", 200, carriers);
-  } catch (error) {
-    return errorResponse(res, error.message || "Internal Server Error", 500);
-  }
-});
-
 exports.getDriver = catchAsync(async (req, res) => {
   try {
     // const drivers = await Driver.find().populate("driver_id_ref");
@@ -368,139 +518,3 @@ exports.getDriver = catchAsync(async (req, res) => {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
 });
-
-exports.getUsers = catchAsync(async (req, res) => {
-  try {
-    const { type } = req.params;
-
-    const query = type ? { role: type } : {};
-
-    const users = await User.find(query).select("-password");
-
-    if (!users) {
-      return errorResponse(res, "No users found", 404);
-    }
-    return successResponse(res, "Users fetched successfully", 200, users);
-  } catch (error) {
-    return errorResponse(res, error.message || "Internal Server Error", 500);
-  }
-});
-
-
-exports.GetCoustomer = catchAsync(async (req, res) => {
-  try {
-    const users = await Customer.find().populate("user_id_ref", "-password -__v -created_at -updated_at");
-    if (!users) {
-      return errorResponse(res, "No users found", 404);
-    }
-    return successResponse(res, "Users fetched successfully", 200, users);
-  } catch (error) {
-    return errorResponse(res, error.message || "Internal Server Error", 500);
-  }
-});
-
-exports.profilegettoken = catchAsync(async (req, res, next) => {
-  try {
-    const id = req?.user?.id;
-    if (!id) {
-      return errorResponse(
-        res,
-        "User is not authorized or Token is missing",
-        401
-      );
-    }
-
-    const userprofile = await User.findById(id).select("email role");
-    if (!userprofile) {
-      return errorResponse(res, "User profile not found", 404);
-    }
-    successResponse(res, "Profile retrieved successfully", 200, userprofile);
-  } catch (error) {
-    errorResponse(res, error.message || "Failed to fetch profile", 500);
-  }
-});
-
-// Notification System Management
-
-
-
-// Shipper dashboard
-exports.DashboardShipperApi = catchAsync(async (req, res) => {
-  try {
-    const Users = await User.aggregate([
-      { $group: { _id: "$role", count: { $sum: 1 } } },
-    ]);
-    const Shipment = await shipment.countDocuments({ shipper_id: req.user.id });
-    const statusCounts = await shipment.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-    ]);
-    // console.log("req.user",req.user);
-    const ShipmentData = await shipment
-      .find({ shipper_id: req.user.id })
-      .populate([
-        { path: "broker_id", select: "name email" },
-        { path: "shipper_id", select: "name email" },
-        { path: "customer_id", select: "name email" },
-        { path: "driver_id", select: "name email" },
-        { path: "carrier_id", select: "name email" },
-      ])
-      .limit(5);
-    res.json({
-      status: true,
-      message: "Dashboard fetched successfully",
-      data: { Users, Shipment, statusCounts, ShipmentData },
-    });
-  } catch (error) {
-    console.error("Error occurred:", error);
-    errorResponse(res, error.message || "Failed to fetch profile", 500);
-  }
-});
-
-// Broker, carrier, driver dashboard
-exports.DashboardApi = catchAsync(async (req, res) => {
-  try {
-    const { user } = req;
-    console.log("req.user", user);
-
-    // Aggregate shipment statuses
-    const statusCounts = await shipment.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-    ]);
-
-    // Determine query filter based on user role
-    let filter = {};
-    if (user?.role === "broker") {
-      filter = { broker_id: user.id };
-    } else if (user?.role === "carrier") {
-      filter = { carrier_id: user.id };
-    } else {
-      filter = { driver_id: user.id };
-    }
-
-    // Fetch count and data in parallel
-    const [Shipment, ShipmentData] = await Promise.all([
-      shipment.countDocuments(filter),
-      shipment.find(filter)
-        .populate([
-          { path: "broker_id", select: "name email" },
-          { path: "shipper_id", select: "name email" },
-          { path: "customer_id", select: "name email" },
-          { path: "driver_id", select: "name email" },
-          { path: "carrier_id", select: "name email" },
-        ])
-        .limit(5),
-    ]);
-
-    res.json({
-      status: true,
-      message: "Dashboard fetched successfully",
-      data: { Shipment, statusCounts, ShipmentData },
-    });
-  } catch (error) {
-    console.error("Error occurred:", error);
-    errorResponse(res, error.message || "Failed to fetch profile", 500);
-  }
-});
-
-
-// 
