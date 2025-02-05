@@ -217,7 +217,7 @@ exports.getShipment = catchAsync(async (req, res) => {
       { path: "customer_id", select: "name email" },
       { path: "driver_id", select: "name email" },
       { path: "carrier_id", select: "name email" }
-    ]);
+    ]).sort({ created_at: -1 });
 
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
@@ -232,7 +232,7 @@ exports.getShipmentofBroker = catchAsync(async (req, res) => {
   try {
     const shipment = await Shipment.find({ broker_id: req.user.id }).populate([
       { path: "carrier_id", select: "name email" }
-    ]);
+    ]).sort({ created_at: -1 });
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
@@ -246,7 +246,7 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
   try {
     const shipment = await Shipment.find({ carrier_id: req.user.id }).populate(
       { path: "driver_id", select: "name email" }
-    );
+    ).sort({ created_at: -1 });
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
@@ -260,7 +260,7 @@ exports.getShipmentofCustomer = catchAsync(async (req, res) => {
   try {
     const shipment = await Shipment.find({ customer_id: req.user.id }).populate(
       { path: "customer_id", select: "name email" }
-    );
+    ).sort({ created_at: -1 });
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
