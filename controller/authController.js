@@ -293,6 +293,42 @@ exports.DashboardApi = catchAsync(async (req, res) => {
   }
 });
 
+// Customer dashboard
+exports.DashboardCustomerApi = catchAsync(async (req, res) => {
+  try {
+    // Ensure req.user.id is converted correctly to ObjectId
+    const customerId = new mongoose.Types.ObjectId(req.user.id);
+
+    const Shipment = await shipment.countDocuments({ customer_id: customerId });
+
+    const statusCounts = await shipment.aggregate([
+      { $match: { customer_id: customerId } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+
+    const ShipmentData = await shipment
+      .find({ customer_id: customerId })
+      .populate([
+        { path: "broker_id", select: "name email" },
+        { path: "shipper_id", select: "name email" },
+        { path: "customer_id", select: "name email" },
+        { path: "driver_id", select: "name email" },
+        { path: "carrier_id", select: "name email" },
+      ])
+      .sort({ created_at: -1 }) // Ensure created_at exists in schema
+      .limit(5);
+
+    res.json({
+      status: true,
+      message: "Dashboard fetched successfully",
+      data: { Shipment, statusCounts, ShipmentData },
+    });
+  } catch (error) {
+    console.error("Error occurred:", error);
+    errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+});
+
 // Carrier Panel 
 exports.createCarrier = catchAsync(async (req, res) => {
   try {
