@@ -23,8 +23,12 @@ const userSchema = new mongoose.Schema({
     required: [true, "Contact is required"],
   },
   Otp : {
-    type: String,
+    type: Number,
     default: null,
+  },
+  OtpVerify:{
+    type: Boolean,
+    default: false,
   },
   created_by: { 
     type: String,

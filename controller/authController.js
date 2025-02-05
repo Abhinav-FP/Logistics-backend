@@ -314,13 +314,13 @@ exports.DashboardApi = catchAsync(async (req, res) => {
 // Carrier Panel 
 exports.createCarrier = catchAsync(async (req, res) => {
   try {
+    console.log("req.user.id",req.user)
     const { name, email, role, contact } = req.body;
 
     // Validate required fields
     if (!email || !role || !name || !contact) {
       return errorResponse(res, "All fields are required", 500, false);
     }
-
     // Generate password
     const password = generator.generate({
       length: 10,
