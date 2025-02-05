@@ -2,7 +2,7 @@ const Driver = require("../model/driver");
 const shipment = require("../model/shipment");
 const User = require("../model/user");
 const catchAsync = require("../utils/catchAsync");
-const { errorResponse, successResponse } = require("../utils/ErrorHandling");
+const { errorResponse, successResponse, validationErrorResponse } = require("../utils/ErrorHandling");
 const Otp = require("../Email/Otp");
 const nodemailer = require('nodemailer');
 const NotificationModel = require("../model/Notification");
@@ -38,7 +38,7 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
 
 exports.GetDrivers = catchAsync(async (req, res) => {
     try {
-        const UserId  = req.user.id;
+        const UserId = req.user.id;
         if (!UserId) {
             return errorResponse(res, "No users found", 404);
         }
@@ -64,11 +64,11 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
         const { driver_id } = req.params;
         const shipments = await shipment.find({ driver_id: driver_id }).populate([
             { path: "broker_id", select: "name email" },
-            { path: "shipper_id", select: "name email"},
-            { path: "customer_id", select:"name email" },
+            { path: "shipper_id", select: "name email" },
+            { path: "customer_id", select: "name email" },
             { path: "driver_id", select: "name email" },
             { path: "carrier_id", select: "name email" }
-          ]);
+        ]);
         if (!shipments) {
             return errorResponse(res, "Shipment not found", 404);
         }
@@ -139,6 +139,28 @@ exports.forgotpassword = catchAsync(async (req, res) => {
     }
 }
 );
+
+exports.forgotOTP = catchAsync(async (req, res) => {
+    try {
+        const { Otp } = req.body;
+        console.log("Received OTP:", Otp);
+        
+        const user = await User.findOne({ Otp: Otp });
+        console.log("User found:", user);
+        if (!user) {
+            return errorResponse(res, "OTP not found", 404);
+        }
+        user.OtpVerify = true;
+        await user.save();
+        return successResponse(res, "OTP verified successfully");
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return errorResponse(res, "Token has expired. Please generate a new token.", 401);
+        }
+        console.error("Error in OTP verification process:", error);
+        return errorResponse(res, "Failed to verify OTP", 500);
+    }
+});
 
 exports.NotificationDriverGet = catchAsync(async (req, res) => {
     const UserId = req.user.id;
