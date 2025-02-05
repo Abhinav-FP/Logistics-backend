@@ -28,7 +28,6 @@ const carrierSchema = new mongoose.Schema({
   },
   fax: {
     type: String,
-    required: [true, "Fax is required"],
   },
   address: {
     type: String,

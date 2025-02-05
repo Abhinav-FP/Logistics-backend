@@ -1,5 +1,6 @@
 const router = require("express").Router();
-const { signup, login, createAccount, getUsers, profilegettoken, createCarrier, createCustomer, getCarrier, createDriver, getDriver, NotificationGet, MarkNotificationAsRead, resetPassword, forgotlinkrecord ,forgotpassword, DashboardShipperApi, DashboardApi } = require("../controller/authController");
+const { signup, login, createAccount, getUsers, profilegettoken, createCarrier, createCustomer, GetCoustomer ,getCarrier, createDriver, getDriver, resetPassword,  DashboardShipperApi, DashboardApi } = require("../controller/authController");
+const { MarkNotificationAsRead, NotificationGet } = require("../controller/Notification");
 const { checkPermission } = require('../middleware/rbacMiddleware');
 const { verifyToken } = require('../middleware/tokenVerify');
 router.post("/signup", signup);
@@ -16,6 +17,8 @@ router.post("/reset-password", verifyToken, resetPassword);
 router.get("/get-carrier", verifyToken, getCarrier);
 router.get("/get-driver", verifyToken, getDriver);
 router.get("/get/:type?", verifyToken, getUsers);
+
+router.get("/cous", verifyToken, GetCoustomer);
 
 router.get("/get-role", verifyToken, profilegettoken);
 

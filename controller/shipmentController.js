@@ -5,7 +5,7 @@ const { validationErrorResponse, errorResponse, successResponse, } = require("..
 const catchAsync = require("../utils/catchAsync");
 const notification = require("../model/Notification")
 const BOL = require("../Email/bol.js");
-const { createNotification, updateNotification, updateStatusNotification } = require('./authController'); // Import the Notification function
+const { createNotification, updateNotification, updateStatusNotification } = require('./Notification.js'); // Import the Notification function
 // const puppeteer = require('puppeteer');
 // var Promise = require('bluebird');
 // const hb = require('handlebars');
@@ -150,7 +150,16 @@ exports.updateShipment = catchAsync(async (req, res) => {
       },
     });
 
-    return successResponse(res, "Shipment updated successfully", 200, shipment);
+    if (updateData.carrier_id) {
+      return successResponse(res, "Shipment Carrier Add successfully", 200, shipment);
+    }
+
+    if (updateData.driver_id) {
+      return successResponse(res, "Shipment Driver Add successfully", 200, shipment);
+    }
+    if (updateData.customer_id) {
+      return successResponse(res, "Shipment Update successfully", 200, shipment);
+    }
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
