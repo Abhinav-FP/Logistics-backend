@@ -67,6 +67,9 @@ exports.login = catchAsync(async (req, res) => {
     if (!user) {
       return errorResponse(res, "User not found", 404, "false");
     }
+    if(user?.role === "driver"){
+      return errorResponse(res, "Drivers are not allowed to login on website", 401, "false");
+    }
 
     if (password != user.password) {
       return errorResponse(res, "Invalid username or password", 401);
@@ -660,6 +663,7 @@ exports.DashboardShipperApi = catchAsync(async (req, res) => {
         { path: "driver_id", select: "name email" },
         { path: "carrier_id", select: "name email" },
       ])
+      .sort({ created_at: -1 }) // Correct sorting method
       .limit(5);
     res.json({
       status: true,
