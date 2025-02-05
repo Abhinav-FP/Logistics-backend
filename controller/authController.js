@@ -13,6 +13,16 @@ const {
 const catchAsync = require("../utils/catchAsync");
 const shipment = require("../model/shipment");
 
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePhoneNumber = (phoneNumber) => {
+  const phoneNumberRegex = /^[0-9]{10}$/; // Assumes a 10-digit phone number
+  return phoneNumberRegex.test(phoneNumber);
+};
+
 exports.signup = catchAsync(async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -139,6 +149,14 @@ exports.createAccount = catchAsync(async (req, res) => {
 
     if (!email || !role || !name || !contact) {
       return errorResponse(res, "All fields are required", 500, false);
+    }
+
+    if (!validateEmail(email)) {
+      return errorResponse(res, "Invalid email address", 500, false);
+    }
+    
+    if (!validatePhoneNumber(contact)) {
+      return errorResponse(res, "Invalid phone number", 500, false);
     }
     const password = generator.generate({
       length: 10,
