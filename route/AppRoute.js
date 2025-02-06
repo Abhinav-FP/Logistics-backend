@@ -13,5 +13,10 @@ router.post("/forget_otp" , Appcontroller.forgotOTP);
 
 router.get("/get-notification" ,verifyToken , Appcontroller.NotificationDriverGet);
 router.post("/read-notification", verifyToken, Appcontroller.MarkNotificationAsRead);
+router.post("/update_direction", Appcontroller.updateDirections)
+router.get("/shipment_update/:id" , Appcontroller.updateShipmentData)
+router.post("/shipment_sign/:id" , Appcontroller.updateShipmentSign)
+
+
 
 module.exports = router;
