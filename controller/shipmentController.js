@@ -246,6 +246,38 @@ exports.getShipment = catchAsync(async (req, res) => {
   }
 });
 
+exports.getShipmentofShipper = catchAsync(async (req, res) => {
+  try {
+    let shipment = await Shipment.find({ shipper_id: req.user.id }).populate([
+      { path: "broker_id", select: "name email contact" },
+      { path: "shipper_id", select: "name email contact" },
+      { path: "customer_id", select: "name email contact" },
+      { path: "driver_id", select: "name email contact" },
+      { path: "carrier_id", select: "name email contact" }
+    ]).sort({ created_at: -1 });
+    if (!shipment) {
+      return errorResponse(res, "No data found", 404);
+    }
+    // Convert to an array of plain objects
+    shipment = shipment.map((shipment) => shipment.toObject());
+
+    // Fetch driver data for each shipment that has a driver_id
+    await Promise.all(
+      shipment.map(async (shipment) => {
+        if (shipment.driver_id) {
+          const driverData = await Driver.findOne({ driver_id_ref: shipment.driver_id._id });
+          if (driverData) {
+            shipment.driver_id = { ...shipment.driver_id, ...driverData.toObject() };
+          }
+        }
+      })
+    );
+    return successResponse(res, "Shipment fetched successfully", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
 exports.getShipmentofBroker = catchAsync(async (req, res) => {
   try {
     let shipment = await Shipment.find({ broker_id: req.user.id }).populate([
