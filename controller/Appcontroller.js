@@ -7,28 +7,79 @@ const { errorResponse, successResponse, validationErrorResponse } = require("../
 const Otp = require("../Email/Otp");
 const nodemailer = require('nodemailer');
 const NotificationModel = require("../model/Notification");
+const directionModel = require("../model/direction");
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
 }
 
+
+exports.login = catchAsync(async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(401).json({
+                status: false,
+                message: "Username and password are required",
+            });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return errorResponse(res, "Invalid email", 401);
+        }
+        if (user?.role !== "driver") {
+            return errorResponse(
+                res,
+                "Only drivers are allowed to login on the app",
+                401,
+                "false"
+            );
+        }
+
+        if (password != user.password) {
+            return errorResponse(res, "Invalid password", 401);
+        }
+
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET_KEY,
+            { expiresIn: process.env.JWT_EXPIRES_IN || "24h" }
+        );
+
+        const userObject = user.toObject();
+        delete userObject.password;
+        return res.status(200).json({
+            status: true,
+            message: "Login successful",
+            token,
+            user: userObject,
+        });
+    } catch (error) {
+        return errorResponse(res, error.message || "Internal Server Error", 500);
+    }
+});
+
+
 exports.UpdateDriver = catchAsync(async (req, res) => {
     try {
-        const { vin, address, trucktype } = req.body;
         if (!req.user.id) {
             return errorResponse(res, "No users found", 404);
         }
+        const { driver_name, mc_number, company_name } = req.body;
         const driverResult = await Driver.findOne({ driver_id_ref: req.user.id });
         if (!driverResult) {
             return errorResponse(res, "Driver already exists.", 400);
         }
         const DriverRecord = await Driver.findByIdAndUpdate(driverResult?._id, {
-            vin: vin,
-            address: address,
-            trucktype: trucktype,
+            mc_number: mc_number,
+            company_name: company_name,
         })
-        successResponse(res, "Customer created successfully!", 201, {
-            DriverRecord,
-        });
+        const UserRecord = await User.findByIdAndUpdate(req.user.id, {
+            name: driver_name,
+        })
+        successResponse(res, "Driver update successfully!", 201,);
     } catch (error) {
         if (error.code === 11000) {
             return errorResponse(res, "Email already exists.", 400);
@@ -37,54 +88,6 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
     }
 });
 
-exports.login = catchAsync(async (req, res) => {  
-    try {
-      const { email, password } = req.body;
-  
-      if (!email || !password) {
-        return res.status(401).json({
-          status: false,
-          message: "Username and password are required",
-        });
-      }
-  
-      const user = await User.findOne({ email });
-  
-      if (!user) {
-        return errorResponse(res, "Invalid email", 401);
-      }
-      if (user?.role !== "driver") {
-        return errorResponse(
-          res,
-          "Only drivers are allowed to login on the app",
-          401,
-          "false"
-        );
-      }
-  
-      if (password != user.password) {
-        return errorResponse(res, "Invalid password", 401);
-      }
-  
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET_KEY,
-        { expiresIn: process.env.JWT_EXPIRES_IN || "24h" }
-      );
-  
-      const userObject = user.toObject();
-      delete userObject.password;
-      return res.status(200).json({
-        status: true,
-        message: "Login successful",
-        token,
-        user: userObject,
-      });
-    } catch (error) {
-      return errorResponse(res, error.message || "Internal Server Error", 500);
-    }
-  });
-
 exports.GetDrivers = catchAsync(async (req, res) => {
     try {
         const UserId = req.user.id;
@@ -92,12 +95,15 @@ exports.GetDrivers = catchAsync(async (req, res) => {
             return errorResponse(res, "No users found", 404);
         }
         const driverResult = await Driver.findOne({ driver_id_ref: UserId });
+        const UserResult = await User.findOne({ _id: UserId }).select("name");
+
         if (!driverResult) {
             return errorResponse(res, "Driver already exists.", 400);
         }
         if (driverResult) {
             successResponse(res, "Driver Get successful!", 201, {
                 driver: driverResult,
+                UserResult: UserResult
             });
         }
     } catch (error) {
@@ -118,10 +124,15 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
             { path: "driver_id", select: "name email" },
             { path: "carrier_id", select: "name email" }
         ]);
+        const directionGet = await directionModel.findOne({
+            Shipment_id: shipments._id,
+        });
         if (!shipments) {
             return errorResponse(res, "Shipment not found", 404);
         }
-        successResponse(res, "Shipment fetched successfully", 200, shipments);
+        successResponse(res, "Shipment fetched successfully", 200, {
+            directionGet, shipments
+        });
     } catch (error) {
         return errorResponse(res, error.message || "Internal Server Error", 500);
     }
@@ -192,10 +203,8 @@ exports.forgotpassword = catchAsync(async (req, res) => {
 exports.forgotOTP = catchAsync(async (req, res) => {
     try {
         const { Otp } = req.body;
-        console.log("Received OTP:", Otp);
-        
+
         const user = await User.findOne({ Otp: Otp });
-        console.log("User found:", user);
         if (!user) {
             return errorResponse(res, "OTP not found", 404);
         }
@@ -302,3 +311,180 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
         });
     }
 });
+
+
+exports.updateShipmentData = catchAsync(async (req, res) => {
+    try {
+        const Id = req.params.id;
+        const notification = await NotificationModel.findOneAndUpdate(
+            { ShipmentId: Id },
+            {
+                receiverDriverId: [
+                    {
+                        Receiver: null,
+                        IsRead: false,
+                    },
+                ],
+            },
+            { new: true }
+        );
+        const shipments = await shipment.findOneAndUpdate(
+            { _id: Id },
+            {
+                driverAccept: "false",
+                driver_id: null
+            },
+            {
+                new: true,  // Return the updated document
+                runValidators: true  // Run schema validators
+            }
+        );
+
+        console.log("shipments", shipments)
+        if (!shipments) {
+            return errorResponse(res, "Shipment not found", 404, false);
+        }
+
+        return successResponse(res, "Shipment Cancelled successfully", 200, shipments); // Corrected response object
+    } catch (error) {
+        return errorResponse(res, error.message || "Internal Server Error", 500);
+    }
+});
+
+exports.updateShipmentSign = catchAsync(async (req, res) => {
+    try {
+        const { customer_sign, driver_sign } = req.body;
+        const Id = req.params.id;
+        if (customer_sign) {
+            const shipments = await shipment.findOneAndUpdate(
+                { _id: Id },
+                {
+                    customer_sign: customer_sign,
+                },
+                {
+                    new: true,
+                    runValidators: true
+                }
+            );
+        } else {
+            const shipments = await shipment.findOneAndUpdate(
+                { _id: Id },
+                {
+                    driver_sign: driver_sign
+                },
+                {
+                    new: true,
+                    runValidators: true
+                }
+            );
+        }
+
+        if (!shipments) {
+            return errorResponse(res, "Shipment not found", 404, false);
+        }
+
+        return successResponse(res, "Shipment updated successfully", 200, shipments); // Corrected response object
+    } catch (error) {
+        return errorResponse(res, error.message || "Internal Server Error", 500);
+    }
+});
+
+
+
+exports.updateDirections = catchAsync(async (req, res) => {
+    let { Shipment_id, CurrentLocation } = req.body;
+    try {
+        const parseLocation = (location) => {
+            const [lat, lng] = location.split(',').map(Number);
+            return { lat, lng };
+        };
+        CurrentLocation = parseLocation(CurrentLocation);
+
+        const doc = await directionModel.findOne({ Shipment_id });
+        if (!doc) {
+            console.error("No document found with Shipment_id:", Shipment_id);
+            return res.status(404).json({
+                success: false,
+                message: "Shipment not found"
+            });
+        }
+
+        if (!Array.isArray(doc.CurrentLocation)) {
+            await directionModel.updateOne({ Shipment_id }, { $set: { CurrentLocation: [] } });
+        }
+
+        const { StartLocation, EndLocation } = doc;
+
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+        const StartToCurrentUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${StartLocation.lat},${StartLocation.lng}&destination=${CurrentLocation.lat},${CurrentLocation.lng}&key=${apiKey}`;
+        const currentToEndUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${CurrentLocation.lat},${CurrentLocation.lng}&destination=${EndLocation.lat},${EndLocation.lng}&key=${apiKey}`;
+
+        const [StartToCurrentResponse, currentToEndResponse] = await Promise.all([
+            axios.get(StartToCurrentUrl),
+            axios.get(currentToEndUrl),
+        ]);
+
+        if (StartToCurrentResponse.data.status === 'OK' && currentToEndResponse.data.status === 'OK') {
+            const StartToCurrentLeg = StartToCurrentResponse.data.routes[0].legs[0];
+            const currentToEndLeg = currentToEndResponse.data.routes[0].legs[0];
+
+            const routeDetails = {
+                StartToEndDistance: doc.routeDetails.StartToEndDistance,
+                StartToEndDuration: doc.routeDetails.StartToEndDuration,
+                StartToEndPolyline: doc.routeDetails.StartToEndPolyline,
+                StartToCurrentDistance: StartToCurrentLeg.distance.text,
+                StartToCurrentDuration: StartToCurrentLeg.duration.text,
+                StartToCurrentPolyline: StartToCurrentResponse.data.routes[0].overview_polyline.points,
+                currentToEndDistance: currentToEndLeg.distance.text,
+                currentToEndDuration: currentToEndLeg.duration.text,
+                currentToEndPolyline: currentToEndResponse.data.routes[0].overview_polyline.points,
+            };
+
+            const result = await directionModel.findOneAndUpdate(
+                { Shipment_id },
+                {
+                    $set: {
+                        EndLocation: {
+                            lat: EndLocation.lat,
+                            lng: EndLocation.lng,
+                            distination: currentToEndLeg.distance.text,
+                            duration: currentToEndLeg.duration.text,
+                            startToEndPolyline: currentToEndResponse.data.routes[0].overview_polyline.points,
+                        },
+                        routeDetails,
+                    },
+                    $push: {
+                        CurrentLocation: {
+                            lat: CurrentLocation.lat,
+                            lng: CurrentLocation.lng,
+                            distination: StartToCurrentLeg.distance.text,
+                            duration: StartToCurrentLeg.duration.text,
+                            CurrentPolyline: StartToCurrentResponse.data.routes[0].overview_polyline.points,
+                            created_at: new Date(),
+                        },
+                    },
+                },
+                { new: true }
+            );
+
+            res.json({
+                success: true,
+                message: "Directions updated successfully",
+                data: result
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: 'Failed to fetch directions from Google Maps API',
+            });
+        }
+    } catch (error) {
+        console.error("Error updating directions:", error.message);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+);

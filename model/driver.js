@@ -18,6 +18,14 @@ const driverSchema = new mongoose.Schema({
     type: String,
     default : null
   },
+  company_name :{
+    type: String,
+default :null
+  },
+  mc_number :{
+    type: String,
+    default :null
+  }
 });
 
 const Driver = mongoose.model("Driver", driverSchema);
