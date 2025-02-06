@@ -2,6 +2,7 @@ const Driver = require("../model/driver");
 const shipment = require("../model/shipment");
 const User = require("../model/user");
 const catchAsync = require("../utils/catchAsync");
+const jwt = require("jsonwebtoken");
 const { errorResponse, successResponse, validationErrorResponse } = require("../utils/ErrorHandling");
 const Otp = require("../Email/Otp");
 const nodemailer = require('nodemailer');
@@ -39,6 +40,54 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
         errorResponse(res, error.message || "Internal Server Error", 500);
     }
 });
+
+exports.login = catchAsync(async (req, res) => {  
+    try {
+      const { email, password } = req.body;
+  
+      if (!email || !password) {
+        return res.status(401).json({
+          status: false,
+          message: "Username and password are required",
+        });
+      }
+  
+      const user = await User.findOne({ email });
+  
+      if (!user) {
+        return errorResponse(res, "Invalid email", 401);
+      }
+      if (user?.role !== "driver") {
+        return errorResponse(
+          res,
+          "Only drivers are allowed to login on the app",
+          401,
+          "false"
+        );
+      }
+  
+      if (password != user.password) {
+        return errorResponse(res, "Invalid password", 401);
+      }
+  
+      const token = jwt.sign(
+        { id: user._id, role: user.role },
+        process.env.JWT_SECRET_KEY,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "24h" }
+      );
+  
+      const userObject = user.toObject();
+      delete userObject.password;
+      return res.status(200).json({
+        status: true,
+        message: "Login successful",
+        token,
+        user: userObject,
+      });
+    } catch (error) {
+      return errorResponse(res, error.message || "Internal Server Error", 500);
+    }
+  });
 
 exports.GetDrivers = catchAsync(async (req, res) => {
     try {

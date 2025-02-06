@@ -74,7 +74,7 @@ exports.login = catchAsync(async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return errorResponse(res, "Invalid username or password", 401);
+      return errorResponse(res, "Invalid email", 401);
     }
     if (user?.role === "driver") {
       return errorResponse(
@@ -86,7 +86,7 @@ exports.login = catchAsync(async (req, res) => {
     }
 
     if (password != user.password) {
-      return errorResponse(res, "Invalid username or password", 401);
+      return errorResponse(res, "Invalid password", 401);
     }
 
     const token = jwt.sign(

@@ -10,6 +10,7 @@ router.get("/shipment/:driver_id", Appcontroller.ShipmentGet);
 router.post("/forget_email" , Appcontroller.forgotlinkrecord);
 router.post("/forget_password" , Appcontroller.forgotpassword);
 router.post("/forget_otp" , Appcontroller.forgotOTP);
+router.post("/login" , Appcontroller.login);
 
 router.get("/get-notification" ,verifyToken , Appcontroller.NotificationDriverGet);
 router.post("/read-notification", verifyToken, Appcontroller.MarkNotificationAsRead);
