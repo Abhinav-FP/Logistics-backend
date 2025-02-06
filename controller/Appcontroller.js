@@ -12,12 +12,62 @@ function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
 }
 
+
+exports.login = catchAsync(async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(401).json({
+                status: false,
+                message: "Username and password are required",
+            });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return errorResponse(res, "Invalid email", 401);
+        }
+        if (user?.role !== "driver") {
+            return errorResponse(
+                res,
+                "Only drivers are allowed to login on the app",
+                401,
+                "false"
+            );
+        }
+
+        if (password != user.password) {
+            return errorResponse(res, "Invalid password", 401);
+        }
+
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET_KEY,
+            { expiresIn: process.env.JWT_EXPIRES_IN || "24h" }
+        );
+
+        const userObject = user.toObject();
+        delete userObject.password;
+        return res.status(200).json({
+            status: true,
+            message: "Login successful",
+            token,
+            user: userObject,
+        });
+    } catch (error) {
+        return errorResponse(res, error.message || "Internal Server Error", 500);
+    }
+});
+
+
 exports.UpdateDriver = catchAsync(async (req, res) => {
     try {
-        const { driver_name, mc_number, company_name } = req.body;
         if (!req.user.id) {
             return errorResponse(res, "No users found", 404);
         }
+        const { driver_name, mc_number, company_name } = req.body;
         const driverResult = await Driver.findOne({ driver_id_ref: req.user.id });
         if (!driverResult) {
             return errorResponse(res, "Driver already exists.", 400);
@@ -29,10 +79,7 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
         const UserRecord = await User.findByIdAndUpdate(req.user.id, {
             name: driver_name,
         })
-        successResponse(res, "Customer created successfully!", 201, {
-            DriverRecord,
-            UserRecord
-        });
+        successResponse(res, "Driver update successfully!", 201,);
     } catch (error) {
         if (error.code === 11000) {
             return errorResponse(res, "Email already exists.", 400);
@@ -41,54 +88,6 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
     }
 });
 
-exports.login = catchAsync(async (req, res) => {  
-    try {
-      const { email, password } = req.body;
-  
-      if (!email || !password) {
-        return res.status(401).json({
-          status: false,
-          message: "Username and password are required",
-        });
-      }
-  
-      const user = await User.findOne({ email });
-  
-      if (!user) {
-        return errorResponse(res, "Invalid email", 401);
-      }
-      if (user?.role !== "driver") {
-        return errorResponse(
-          res,
-          "Only drivers are allowed to login on the app",
-          401,
-          "false"
-        );
-      }
-  
-      if (password != user.password) {
-        return errorResponse(res, "Invalid password", 401);
-      }
-  
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET_KEY,
-        { expiresIn: process.env.JWT_EXPIRES_IN || "24h" }
-      );
-  
-      const userObject = user.toObject();
-      delete userObject.password;
-      return res.status(200).json({
-        status: true,
-        message: "Login successful",
-        token,
-        user: userObject,
-      });
-    } catch (error) {
-      return errorResponse(res, error.message || "Internal Server Error", 500);
-    }
-  });
-
 exports.GetDrivers = catchAsync(async (req, res) => {
     try {
         const UserId = req.user.id;
@@ -96,12 +95,15 @@ exports.GetDrivers = catchAsync(async (req, res) => {
             return errorResponse(res, "No users found", 404);
         }
         const driverResult = await Driver.findOne({ driver_id_ref: UserId });
+        const UserResult = await User.findOne({ _id: UserId }).select("name");
+
         if (!driverResult) {
             return errorResponse(res, "Driver already exists.", 400);
         }
         if (driverResult) {
             successResponse(res, "Driver Get successful!", 201, {
                 driver: driverResult,
+                UserResult: UserResult
             });
         }
     } catch (error) {
@@ -122,10 +124,15 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
             { path: "driver_id", select: "name email" },
             { path: "carrier_id", select: "name email" }
         ]);
+        const directionGet = await directionModel.findOne({
+            Shipment_id: shipments._id,
+        });
         if (!shipments) {
             return errorResponse(res, "Shipment not found", 404);
         }
-        successResponse(res, "Shipment fetched successfully", 200, shipments);
+        successResponse(res, "Shipment fetched successfully", 200, {
+            directionGet, shipments
+        });
     } catch (error) {
         return errorResponse(res, error.message || "Internal Server Error", 500);
     }
@@ -196,10 +203,8 @@ exports.forgotpassword = catchAsync(async (req, res) => {
 exports.forgotOTP = catchAsync(async (req, res) => {
     try {
         const { Otp } = req.body;
-        console.log("Received OTP:", Otp);
 
         const user = await User.findOne({ Otp: Otp });
-        console.log("User found:", user);
         if (!user) {
             return errorResponse(res, "OTP not found", 404);
         }
@@ -310,9 +315,7 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
 
 exports.updateShipmentData = catchAsync(async (req, res) => {
     try {
-        console.log("req.body", req.body)
         const Id = req.params.id;
-
         const notification = await NotificationModel.findOneAndUpdate(
             { ShipmentId: Id },
             {
@@ -325,11 +328,6 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
             },
             { new: true }
         );
-        if (notification) {
-            console.log("Notification updated successfully:", notification);
-        } else {
-            console.log("Notification not found.");
-        }
         const shipments = await shipment.findOneAndUpdate(
             { _id: Id },
             {
@@ -347,7 +345,7 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
             return errorResponse(res, "Shipment not found", 404, false);
         }
 
-        return successResponse(res, "Shipment updated successfully", 200, shipments); // Corrected response object
+        return successResponse(res, "Shipment Cancelled successfully", 200, shipments); // Corrected response object
     } catch (error) {
         return errorResponse(res, error.message || "Internal Server Error", 500);
     }
@@ -355,21 +353,32 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
 
 exports.updateShipmentSign = catchAsync(async (req, res) => {
     try {
-        console.log("req.body", req.body)
         const { customer_sign, driver_sign } = req.body;
-        console.log("req.params.id", req.params.id);
         const Id = req.params.id;
-        const shipments = await shipment.findOneAndUpdate(
-            { _id: Id },
-            {
-                customer_sign: customer_sign,
-                driver_sign: driver_sign
-            },
-            {
-                new: true,
-                runValidators: true
-            }
-        );
+        if (customer_sign) {
+            const shipments = await shipment.findOneAndUpdate(
+                { _id: Id },
+                {
+                    customer_sign: customer_sign,
+                },
+                {
+                    new: true,
+                    runValidators: true
+                }
+            );
+        } else {
+            const shipments = await shipment.findOneAndUpdate(
+                { _id: Id },
+                {
+                    driver_sign: driver_sign
+                },
+                {
+                    new: true,
+                    runValidators: true
+                }
+            );
+        }
+
         if (!shipments) {
             return errorResponse(res, "Shipment not found", 404, false);
         }
