@@ -83,6 +83,10 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     required: [true, "Type of goods is required"],
   },
+  driverAccpet: {
+    type: String,
+    default: null,
+  },
   user_sign :{
     type: String,
     default :null
