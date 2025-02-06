@@ -280,13 +280,14 @@ exports.getShipmentofBroker = catchAsync(async (req, res) => {
 
 exports.getShipmentofCarrier = catchAsync(async (req, res) => {
   try {
-    let shipment = await Shipment.find({ carrier_id: req.user.id }).populate(
+    let shipment = await Shipment.find({ carrier_id: req.user.id }).populate([
       { path: "broker_id", select: "name email contact" },
       { path: "shipper_id", select: "name email contact" },
       { path: "customer_id", select: "name email contact" },
       { path: "driver_id", select: "name email contact" },
-      { path: "carrier_id", select: "name email contact" }
+      { path: "carrier_id", select: "name email contact" }]
     ).sort({ created_at: -1 });
+    console.log("shipment",shipment);
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
@@ -312,12 +313,12 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
 
 exports.getShipmentofCustomer = catchAsync(async (req, res) => {
   try {
-    let shipment = await Shipment.find({ customer_id: req.user.id }).populate(
+    let shipment = await Shipment.find({ customer_id: req.user.id }).populate([
       { path: "broker_id", select: "name email contact" },
       { path: "shipper_id", select: "name email contact" },
       { path: "customer_id", select: "name email contact" },
       { path: "driver_id", select: "name email contact" },
-      { path: "carrier_id", select: "name email contact" }
+      { path: "carrier_id", select: "name email contact" }]
     ).sort({ created_at: -1 });
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
