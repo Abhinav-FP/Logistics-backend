@@ -23,6 +23,10 @@ const directionsSchema = mongoose.Schema({
             type: String,
             required: true
         },
+        location:{
+            type: String,
+            required: true
+        },
         created_at: {
             type: Date,
             default: Date.now
@@ -31,6 +35,10 @@ const directionsSchema = mongoose.Schema({
     CurrentLocation: [{
         lat: {
             type: Number,
+            required: true
+        },
+        location:{
+            type: String,
             required: true
         },
         lng: {
@@ -57,6 +65,10 @@ const directionsSchema = mongoose.Schema({
     EndLocation: {
         lat: {
             type: Number,
+            required: true
+        },
+        location:{
+            type: String,
             required: true
         },
         lng: {

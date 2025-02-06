@@ -6,6 +6,7 @@ const catchAsync = require("../utils/catchAsync");
 const notification = require("../model/Notification")
 const BOL = require("../Email/bol.js");
 const { createNotification, updateNotification, updateStatusNotification } = require('./Notification.js'); // Import the Notification function
+const { AddDirection } = require('./directionsController.js');
 // const puppeteer = require('puppeteer');
 // var Promise = require('bluebird');
 // const hb = require('handlebars');
@@ -67,6 +68,7 @@ exports.createShipment = catchAsync(async (req, res) => {
       "weight",
       "dimensions",
       "typeOfGoods",
+      "current_location"
     ];
 
     // Check for missing required fields
@@ -100,6 +102,15 @@ exports.createShipment = catchAsync(async (req, res) => {
         receiverBrokerId: [req.body.broker_id].map(id => ({ Receiver: id })),
         receiverCustomerId: [req.body.customer_id].map(id => ({ Receiver: id })),
         ShipmentId: shipment._id,
+      },
+    });
+
+    await AddDirection({
+      body: {
+        pickup_location: shipment.pickup_location,
+        drop_location: shipment.drop_location,
+        current_location:shipment.pickup_location,
+        Shipment_id: shipment._id,
       },
     });
 

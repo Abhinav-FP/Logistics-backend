@@ -8,6 +8,8 @@ const Otp = require("../Email/Otp");
 const nodemailer = require('nodemailer');
 const NotificationModel = require("../model/Notification");
 const directionModel = require("../model/direction");
+const axios = require('axios');
+
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
 }
@@ -332,7 +334,8 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
             { _id: Id },
             {
                 driverAccept: "false",
-                driver_id: null
+                driver_id: null,
+                status : "pending" 
             },
             {
                 new: true,  // Return the updated document
@@ -393,64 +396,86 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
 
 exports.updateDirections = catchAsync(async (req, res) => {
     let { Shipment_id, CurrentLocation } = req.body;
-    try {
-        const parseLocation = (location) => {
-            const [lat, lng] = location.split(',').map(Number);
-            return { lat, lng };
-        };
-        CurrentLocation = parseLocation(CurrentLocation);
 
-        const doc = await directionModel.findOne({ Shipment_id });
-        if (!doc) {
-            console.error("No document found with Shipment_id:", Shipment_id);
-            return res.status(404).json({
+    try {
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+        const shipments = await shipment.findOneAndUpdate(
+            { _id: Shipment_id },
+            {
+                CurrentLocation: CurrentLocation
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(CurrentLocation)}&key=${apiKey}`;
+        const geocodeResponse = await axios.get(geocodeUrl);
+        if (geocodeResponse.data.status !== 'OK') {
+            return res.status(400).json({
                 success: false,
-                message: "Shipment not found"
+                message: "Failed to convert address to coordinates",
             });
         }
 
-        if (!Array.isArray(doc.CurrentLocation)) {
-            await directionModel.updateOne({ Shipment_id }, { $set: { CurrentLocation: [] } });
+        const locationData = geocodeResponse.data.results[0].geometry.location;
+        CurrentLocation = {
+            location : geocodeResponse.data.results[0].formatted_address,
+            lat: locationData.lat,
+            lng: locationData.lng,
+        };
+
+        // Find shipment document
+        const doc = await directionModel.findOne({ Shipment_id });
+        if (!doc) {
+            return res.status(404).json({
+                success: false,
+                message: "Shipment not found",
+            });
         }
 
         const { StartLocation, EndLocation } = doc;
 
-        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-
-        const StartToCurrentUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${StartLocation.lat},${StartLocation.lng}&destination=${CurrentLocation.lat},${CurrentLocation.lng}&key=${apiKey}`;
+        // Construct Directions API URLs
+        const startToCurrentUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${StartLocation.lat},${StartLocation.lng}&destination=${CurrentLocation.lat},${CurrentLocation.lng}&key=${apiKey}`;
         const currentToEndUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${CurrentLocation.lat},${CurrentLocation.lng}&destination=${EndLocation.lat},${EndLocation.lng}&key=${apiKey}`;
 
-        const [StartToCurrentResponse, currentToEndResponse] = await Promise.all([
-            axios.get(StartToCurrentUrl),
+        // Fetch directions data from Google Maps API
+        const [startToCurrentResponse, currentToEndResponse] = await Promise.all([
+            axios.get(startToCurrentUrl),
             axios.get(currentToEndUrl),
         ]);
 
-        if (StartToCurrentResponse.data.status === 'OK' && currentToEndResponse.data.status === 'OK') {
-            const StartToCurrentLeg = StartToCurrentResponse.data.routes[0].legs[0];
+        if (startToCurrentResponse.data.status === 'OK' && currentToEndResponse.data.status === 'OK') {
+            const startToCurrentLeg = startToCurrentResponse.data.routes[0].legs[0];
             const currentToEndLeg = currentToEndResponse.data.routes[0].legs[0];
 
             const routeDetails = {
                 StartToEndDistance: doc.routeDetails.StartToEndDistance,
                 StartToEndDuration: doc.routeDetails.StartToEndDuration,
                 StartToEndPolyline: doc.routeDetails.StartToEndPolyline,
-                StartToCurrentDistance: StartToCurrentLeg.distance.text,
-                StartToCurrentDuration: StartToCurrentLeg.duration.text,
-                StartToCurrentPolyline: StartToCurrentResponse.data.routes[0].overview_polyline.points,
-                currentToEndDistance: currentToEndLeg.distance.text,
-                currentToEndDuration: currentToEndLeg.duration.text,
-                currentToEndPolyline: currentToEndResponse.data.routes[0].overview_polyline.points,
+                StartToCurrentDistance: startToCurrentLeg.distance.text,
+                StartToCurrentDuration: startToCurrentLeg.duration.text,
+                StartToCurrentPolyline: startToCurrentResponse.data.routes[0].overview_polyline.points,
+                CurrentToEndDistance: currentToEndLeg.distance.text,
+                CurrentToEndDuration: currentToEndLeg.duration.text,
+                CurrentToEndPolyline: currentToEndResponse.data.routes[0].overview_polyline.points,
             };
 
-            const result = await directionModel.findOneAndUpdate(
+            // Update shipment document
+            const updatedDoc = await directionModel.findOneAndUpdate(
                 { Shipment_id },
                 {
                     $set: {
                         EndLocation: {
+                            location:EndLocation.location ,
                             lat: EndLocation.lat,
                             lng: EndLocation.lng,
-                            distination: currentToEndLeg.distance.text,
+                            distance: currentToEndLeg.distance.text,
                             duration: currentToEndLeg.duration.text,
-                            startToEndPolyline: currentToEndResponse.data.routes[0].overview_polyline.points,
+                            polyline: currentToEndResponse.data.routes[0].overview_polyline.points,
                         },
                         routeDetails,
                     },
@@ -458,10 +483,11 @@ exports.updateDirections = catchAsync(async (req, res) => {
                         CurrentLocation: {
                             lat: CurrentLocation.lat,
                             lng: CurrentLocation.lng,
-                            distination: StartToCurrentLeg.distance.text,
-                            duration: StartToCurrentLeg.duration.text,
-                            CurrentPolyline: StartToCurrentResponse.data.routes[0].overview_polyline.points,
-                            created_at: new Date(),
+                            location: CurrentLocation.location ,
+                            distance: startToCurrentLeg.distance.text,
+                            duration: startToCurrentLeg.duration.text,
+                            polyline: startToCurrentResponse.data.routes[0].overview_polyline.points,
+                            createdAt: new Date(),
                         },
                     },
                 },
@@ -471,7 +497,7 @@ exports.updateDirections = catchAsync(async (req, res) => {
             res.json({
                 success: true,
                 message: "Directions updated successfully",
-                data: result
+                data: updatedDoc,
             });
         } else {
             res.status(400).json({
@@ -486,5 +512,4 @@ exports.updateDirections = catchAsync(async (req, res) => {
             message: error.message,
         });
     }
-}
-);
+});
