@@ -388,26 +388,33 @@ exports.getShipmentofCustomer = catchAsync(async (req, res) => {
 
 exports.getBOL = catchAsync(async (req, res) => {
   try {
-    // Random data
-    const name = "John Doe";
-    const description = "Fragile electronics package, handle with care.";
-    const pickup_location = "New York, USA";
-    const drop_location = "Los Angeles, USA";
-    const current_location = "Chicago, USA";
-    const customer_id = "1234567890abcdef12345678";
-    const status = "transit";
-    const shipper_id = "abcdef1234567890abcdef12";
-    const broker_id = "7890abcdef1234567890abcd";
-    const carrier_id = "4567890abcdef123456789abc";
-    const driver_id = "abcdef78901234567890abcd";
-    const shippingDate = "2025-01-15";
-    const deliveryDateExpect = "2025-01-20";
-    const cost = 2500;
-    const paymentStatus = "paid";
-    const quantity = 10;
-    const weight = 25.5; // in kilograms
-    const dimensions = "50x40x30"; // length x width x height in cm
-    const typeOfGoods = "Electronics";
+    let shipments = await Shipment.findById({_id : req?.params?.id}).populate([
+      { path: "broker_id", select: "-password" },
+      { path: "shipper_id", select: "-password" },
+      { path: "customer_id", select: "-password" },
+      { path: "driver_id", select: "-password" },
+      { path: "carrier_id", select: "-password" }
+    ]).sort({ created_at: -1 });
+
+    if (!shipments || shipments.length === 0) {
+      return errorResponse(res, "No data found", 404);
+    }
+
+    // Convert to an array of plain objects
+    shipments = shipments.toObject();
+
+    // Fetch driver data for each shipment that has a driver_id
+        if (shipments.driver_id) {
+          const driverData = await Driver.findOne({ driver_id_ref: shipments.driver_id._id });
+          if (driverData) {
+            shipments.driver_id = { ...shipments.driver_id, ...driverData.toObject() };
+          }
+        }
+    return res.json({
+      status:true,
+      message:"Data retrieved sucessfully",
+      data:shipments
+    })
 
     const BOLHTML = BOL(
       name,

@@ -14,6 +14,6 @@ router.get("/get-shipment-broker", verifyToken, checkPermission('view-shipment')
 router.get("/get-shipment-carrier", verifyToken, checkPermission('view-shipment'), getShipmentofCarrier);
 router.get("/get-shipment-customer", verifyToken, checkPermission('view-shipment'), getShipmentofCustomer);
 // router.get("/get-bol",verifyToken, checkPermission('view-shipment'), getBOL);
-router.get("/get-bol", getBOL);
+router.get("/get-bol/:id", getBOL);
 
 module.exports = router;
