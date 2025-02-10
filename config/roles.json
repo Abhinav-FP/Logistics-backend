@@ -47,6 +47,7 @@
         "name": "customer",
         "permissions": [
           "read_record",
+          "update-shipment",
           "view-shipment"
         ]
       }

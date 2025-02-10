@@ -96,6 +96,10 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     default :null
   },
+  review:{
+    type: String,
+    default :null
+  },
   created_at: {
     type: Date,
     default: Date.now,
