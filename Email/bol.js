@@ -1,24 +1,5 @@
-module.exports = ({
-  name,
-  description,
-  pickup_location,
-  drop_location,
-  current_location,
-  customer_id,
-  status,
-  shipper_id,
-  broker_id,
-  carrier_id,
-  driver_id,
-  shippingDate,
-  deliveryDateExpect,
-  cost,
-  paymentStatus,
-  quantity,
-  weight,
-  dimensions,
-  typeOfGoods,
-}) => {
+module.exports = ({shipments}) => {
+	// console.log("shipments",shipments);
   return `
      <!DOCTYPE html>
   <html>
@@ -56,7 +37,7 @@ module.exports = ({
 				<table cellspacing="0" cellpadding="0" style="width: 100%;">
 					 <tr>
 					 	<td width="128px" style="padding-bottom: 10px;">Effective date :</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shippingDate}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.shippingDate || ""}</td>
 					 </tr>
 					  <tr>
 					 	<td style="padding-bottom: 10px;">equipment :</td>
@@ -64,7 +45,7 @@ module.exports = ({
 					 </tr>
 					  <tr>
 					 	<td style="padding-bottom: 10px;">commodity :</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${typeOfGoods}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.typeOfGoods || ""}</td>
 					 </tr>
 				</table> 
 			</td>			
@@ -72,15 +53,15 @@ module.exports = ({
 				<table cellspacing="0" cellpadding="0" style="width: 100%;">
 					 <tr>
 					 	<td style="padding-bottom: 10px;">Carrier :</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${carrier_name}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.carrier_id?.name || ""}</td>
 					 </tr>
 					  <tr>
 					 	<td style="padding-bottom: 10px;">Broker # :</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${broker_name}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.broker_id?.name || ""}</td>
 					 </tr>
 					  <tr>
 					 	<td style="padding-bottom: 10px;">Quantity :</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${quantity}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.quantity || ""}</td>
 					 </tr>
 				</table> 
 			</td> 
@@ -100,15 +81,15 @@ module.exports = ({
 				<table cellspacing="0" cellpadding="0" style="width: 100%;">
 					 <tr>
 					 	<td width="128px" style="padding-bottom: 10px;">Dimention :</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${dimension}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.dimensions || ""}</td>
 					 </tr>
 					  <tr>
 					 	<td style="padding-bottom: 10px;">Weight :</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${weight}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.weight || ""}</td>
 					 </tr>
 					  <tr>
 					 	<td style="padding-bottom: 10px;">Payment :</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${paymentStatus}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.paymentStatus || ""}</td>
 					 </tr>
 				</table> 
 			</td>			
@@ -116,15 +97,15 @@ module.exports = ({
 				<table cellspacing="0" cellpadding="0" style="width: 100%;">
 					 <tr>
 					 	<td style="padding-bottom: 10px;">Driver: </td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${driver_name}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.driver_id?.name || ""}</td>
 					 </tr>
 					  <tr>
 					 	<td style="padding-bottom: 10px;">Contact: </td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${driver_phone}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.driver_id?.contact || ""}</td>
 					 </tr>
 					  <tr>
 					 	<td style="padding-bottom: 10px;">Company:</td>
-					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${driver_company}</td>
+					 	<td style="color: #7A7A7A;padding-bottom: 10px;">${shipments?.driver_id?.company_name || ""}</td>
 					 </tr>
 				</table> 
 			</td> 
@@ -157,11 +138,11 @@ module.exports = ({
 					   	   <table cellspacing="0" cellpadding="0" style="width: 100%;" >
 					   	   	  <tr>
 					   	   	  	<td width="25%" style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 7px 10px 5px 10px;border-right: 1px solid #a5a5a5;">Pick- up date:</td>
-					   	   	  	<td width="75%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${shippingDate}</td>
+					   	   	  	<td width="75%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${shipments?.shippingDate || ""}</td>
 					   	   	  </tr>
 					   	   	  <tr>
 					   	   	  	<td style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 5px 10px 7px 10px;border-right: 1px solid #a5a5a5;border-bottom: 1px solid #a5a5a5;">Address:</td>
-					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">${pickup_location} </td>
+					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">${shipments?.pickup_location || ""} </td>
 					   	   	  </tr>
 					   	   </table>
 					   </td>	
@@ -186,11 +167,11 @@ module.exports = ({
 					   	   <table cellspacing="0" cellpadding="0" style="width: 100%;" >
 					   	   	  <tr>
 					   	   	  	<td width="25%" style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 7px 10px 5px 10px; ">Shipper Name :</td>
-					   	   	  	<td width="75%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${shipper_id?.name}</td>
+					   	   	  	<td width="75%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${shipments?.shipper_id?.name || ""}</td>
 					   	   	  </tr>
 					   	   	  <tr>
 					   	   	  	<td style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 5px 10px 7px 10px;">Contact :</td>
-					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">${shipper_id?.contact} </td>
+					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">${shipments?.shipper_id?.contact || ""} </td>
 					   	   	  </tr>
 					   	   </table>
 					   </td>	
@@ -209,11 +190,11 @@ module.exports = ({
 					   	   <table cellspacing="0" cellpadding="0" style="width: 100%;" >
 					   	   	  <tr>
 					   	   	  	<td width="25%" style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 7px 10px 5px 10px;border-right: 1px solid #a5a5a5;">delivery date :</td>
-					   	   	  	<td width="75%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${deliveryDateExpect}</td>
+					   	   	  	<td width="75%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${shipments?.deliveryDateExpect || ""}</td>
 					   	   	  </tr>
 					   	   	  <tr>
 					   	   	  	<td style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 5px 10px 7px 10px;border-right: 1px solid #a5a5a5;border-bottom: 1px solid #a5a5a5;">Address:</td>
-					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">${drop_location} </td>
+					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">${shipments?.drop_location || ""} </td>
 					   	   	  </tr>
 					   	   </table>
 					   </td>	
@@ -238,12 +219,12 @@ module.exports = ({
 					   	   <table cellspacing="0" cellpadding="0" style="width: 100%;" >
 					   	   	  <tr>
 					   	   	  	<td width="25%" style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 7px 10px 5px 10px; ">Customer Name :</td>
-					   	   	  	<td width="75%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${customer_id?.name}</td>
+					   	   	  	<td width="75%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${shipments?.customer_id?.name || ""}</td>
 					   	   	  </tr>
 					   	   	  <tr>
 					   	   	  	<td style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 5px 10px 7px 10px;">Contact :</td>
 					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">
-					   	   	  	    ${customer_id?.contact}
+					   	   	  	    ${shipments?.customer_id?.contact}
 					   	   	  	</td>
 					   	   	  </tr>
 					   	   </table>
@@ -277,7 +258,7 @@ module.exports = ({
 					   	   	  	<td style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 7px 10px 5px 10px; ">  </td> 
 					   	   	  </tr>
 					   	   	  <tr>
-					   	   	  	<td style="color: #1B1B1B;font-weight: bold; font-size: 20px;padding: 5px 10px 7px 0px;text-align: right; ">Total Carrier Pay : ${cost} </td> 
+					   	   	  	<td style="color: #1B1B1B;font-weight: bold; font-size: 20px;padding: 5px 10px 7px 0px;text-align: right; ">Total Carrier Pay : ${shipments?.cost || ""} </td> 
 					   	   	  </tr>
 					   	   </tbody>
 					   	</table>

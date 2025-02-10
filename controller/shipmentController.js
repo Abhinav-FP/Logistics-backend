@@ -414,37 +414,17 @@ exports.getBOL = catchAsync(async (req, res) => {
             shipments.driver_id = { ...shipments.driver_id, ...driverData.toObject() };
           }
         }
-    return res.json({
-      status:true,
-      message:"Data retrieved sucessfully",
-      data:shipments
-    })
+    // return res.json({
+    //   status:true,
+    //   message:"Data retrieved sucessfully",
+    //   data:shipments
+    // })
 
-    const BOLHTML = BOL(
-      name,
-      description,
-      pickup_location,
-      drop_location,
-      current_location,
-      customer_id,
-      status,
-      shipper_id,
-      broker_id,
-      carrier_id,
-      driver_id,
-      shippingDate,
-      deliveryDateExpect,
-      cost,
-      paymentStatus,
-      quantity,
-      weight,
-      dimensions,
-      typeOfGoods
-    );
+    const BOLHTML = BOL({shipments});
 
     const options1 = {
       width: "800px",
-      height: "968.219px",
+      height: "1250px",
       preferCSSPageSize: true,
       printBackground: true,
     };
