@@ -25,7 +25,7 @@ const validatePhoneNumber = (phoneNumber) => {
 
 exports.signup = catchAsync(async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { name,email, password, role, contact } = req.body;
 
     // Check if required fields are provided
     if ((!email, !password, !role)) {
@@ -34,9 +34,11 @@ exports.signup = catchAsync(async (req, res) => {
 
     // Create new user record
     const record = new User({
+      name,
       email,
       password,
       role,
+      contact,
       created_by: null,
     });
 
