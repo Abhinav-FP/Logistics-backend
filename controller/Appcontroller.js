@@ -359,6 +359,7 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         const { customer_sign, driver_sign } = req.body;
         const Id = req.params.id;
         if (customer_sign) {
+            
             const shipments = await shipment.findOneAndUpdate(
                 { _id: Id },
                 {
