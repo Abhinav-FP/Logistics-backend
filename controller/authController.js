@@ -291,7 +291,6 @@ exports.DashboardShipperApi = catchAsync(async (req, res) => {
 exports.DashboardApi = catchAsync(async (req, res) => {
   try {
     const { user } = req;
-    console.log("req.user", user);
 
     const shipperId = new mongoose.Types.ObjectId(user.id);
     let filter = {};
@@ -323,12 +322,12 @@ exports.DashboardApi = catchAsync(async (req, res) => {
         .limit(5),
     ]);
 
-    if (Shipment && Shipment.length !== 0) {
-      Shipment = Shipment.map((shipment) => shipment.toObject());
-
+    if (ShipmentData && ShipmentData.length !== 0) {
+      ShipmentData = ShipmentData.map((shipment) => shipment.toObject());
+    
       // Fetch driver data for each shipment that has a driver_id
       await Promise.all(
-        Shipment.map(async (shipment) => {
+        ShipmentData.map(async (shipment) => {
           if (shipment.driver_id) {
             const driverData = await Driver.findOne({
               driver_id_ref: shipment.driver_id._id,
@@ -342,7 +341,7 @@ exports.DashboardApi = catchAsync(async (req, res) => {
           }
         })
       );
-    }
+    }    
 
     res.json({
       status: true,
