@@ -184,10 +184,10 @@ exports.forgotlinkrecord = catchAsync(async (req, res) => {
 
 exports.forgotpassword = catchAsync(async (req, res) => {
     try {
-        const { Otp, newPassword } = req.body;
-        const user = await User.findOne({ Otp: Otp });
+        const { email, newPassword ,Otp} = req.body;
+        const user = await User.findOne({ email: email ,Otp :Otp });
         if (!user) {
-            return errorResponse(res, "User not found", 404);
+            return errorResponse(res, "Invalid Email or Otp", 404);
         }
         user.password = newPassword
         await user.save();
@@ -204,11 +204,15 @@ exports.forgotpassword = catchAsync(async (req, res) => {
 
 exports.forgotOTP = catchAsync(async (req, res) => {
     try {
-        const { Otp } = req.body;
+        const { Otp ,email } = req.body;
 
-        const user = await User.findOne({ Otp: Otp });
+        const user = await User.findOne({ email: email });
         if (!user) {
-            return errorResponse(res, "OTP not found", 404);
+            return errorResponse(res, "Invalid Emaill", 404);
+        }
+       
+        if (user.Otp !== Otp) {
+            return errorResponse(res, "Invalid OTP ", 404);
         }
         user.OtpVerify = true;
         await user.save();
@@ -356,7 +360,7 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
 
 exports.updateShipmentSign = catchAsync(async (req, res) => {
     try {
-        const { customer_sign, driver_sign } = req.body;
+        const { customer_sign, driver_sign } = req.file;
         const Id = req.params.id;
         if (customer_sign) {
             
