@@ -325,12 +325,7 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
         const notification = await NotificationModel.findOneAndUpdate(
             { ShipmentId: Id },
             {
-                receiverDriverId: [
-                    {
-                        Receiver: null,
-                        IsRead: false,
-                    },
-                ],
+                receiverDriverId:[]
             },
             { new: true }
         );
