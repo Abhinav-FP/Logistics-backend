@@ -25,7 +25,7 @@ const validatePhoneNumber = (phoneNumber) => {
 
 exports.signup = catchAsync(async (req, res) => {
   try {
-    const { name,email, password, role, contact } = req.body;
+    const { name, email, password, role, contact } = req.body;
 
     // Check if required fields are provided
     if ((!email, !password, !role)) {
@@ -156,7 +156,7 @@ exports.createAccount = catchAsync(async (req, res) => {
     if (!validateEmail(email)) {
       return errorResponse(res, "Invalid email address", 500, false);
     }
-    
+
     if (!validatePhoneNumber(contact)) {
       return errorResponse(res, "Invalid phone number", 500, false);
     }
@@ -243,7 +243,7 @@ exports.DashboardShipperApi = catchAsync(async (req, res) => {
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
-    const ShipmentData = await shipment
+    let ShipmentData = await shipment
       .find({ shipper_id: shipperId })
       .populate([
         { path: "broker_id", select: "name email" },
@@ -252,8 +252,29 @@ exports.DashboardShipperApi = catchAsync(async (req, res) => {
         { path: "driver_id", select: "name email" },
         { path: "carrier_id", select: "name email" },
       ])
-      .sort({ created_at: -1 }) // Ensure created_at exists in schema
+      .sort({ created_at: -1 })
       .limit(5);
+
+    if (ShipmentData && ShipmentData.length !== 0) {
+      ShipmentData = ShipmentData.map((shipment) => shipment.toObject());
+
+      // Fetch driver data for each shipment that has a driver_id
+      await Promise.all(
+        ShipmentData.map(async (shipment) => {
+          if (shipment.driver_id) {
+            const driverData = await Driver.findOne({
+              driver_id_ref: shipment.driver_id._id,
+            });
+            if (driverData) {
+              shipment.driver_id = {
+                ...shipment.driver_id,
+                ...driverData.toObject(),
+              };
+            }
+          }
+        })
+      );
+    }
 
     res.json({
       status: true,
@@ -283,7 +304,7 @@ exports.DashboardApi = catchAsync(async (req, res) => {
     }
 
     // Fetch count and data in parallel
-    const [statusCounts, Shipment, ShipmentData] = await Promise.all([
+    let [statusCounts, Shipment, ShipmentData] = await Promise.all([
       shipment.aggregate([
         { $match: filter },
         { $group: { _id: "$status", count: { $sum: 1 } } },
@@ -301,6 +322,27 @@ exports.DashboardApi = catchAsync(async (req, res) => {
         .sort({ created_at: -1 })
         .limit(5),
     ]);
+
+    if (Shipment && Shipment.length !== 0) {
+      Shipment = Shipment.map((shipment) => shipment.toObject());
+
+      // Fetch driver data for each shipment that has a driver_id
+      await Promise.all(
+        Shipment.map(async (shipment) => {
+          if (shipment.driver_id) {
+            const driverData = await Driver.findOne({
+              driver_id_ref: shipment.driver_id._id,
+            });
+            if (driverData) {
+              shipment.driver_id = {
+                ...shipment.driver_id,
+                ...driverData.toObject(),
+              };
+            }
+          }
+        })
+      );
+    }
 
     res.json({
       status: true,
@@ -326,7 +368,7 @@ exports.DashboardCustomerApi = catchAsync(async (req, res) => {
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
-    const ShipmentData = await shipment
+    let ShipmentData = await shipment
       .find({ customer_id: customerId })
       .populate([
         { path: "broker_id", select: "name email" },
@@ -337,6 +379,27 @@ exports.DashboardCustomerApi = catchAsync(async (req, res) => {
       ])
       .sort({ created_at: -1 }) // Ensure created_at exists in schema
       .limit(5);
+
+    if (ShipmentData && ShipmentData.length !== 0) {
+      ShipmentData = ShipmentData.map((shipment) => shipment.toObject());
+
+      // Fetch driver data for each shipment that has a driver_id
+      await Promise.all(
+        ShipmentData.map(async (shipment) => {
+          if (shipment.driver_id) {
+            const driverData = await Driver.findOne({
+              driver_id_ref: shipment.driver_id._id,
+            });
+            if (driverData) {
+              shipment.driver_id = {
+                ...shipment.driver_id,
+                ...driverData.toObject(),
+              };
+            }
+          }
+        })
+      );
+    }
 
     res.json({
       status: true,
@@ -349,10 +412,67 @@ exports.DashboardCustomerApi = catchAsync(async (req, res) => {
   }
 });
 
-// Carrier Panel 
+// Admin Dashboard
+exports.DashboardAdminApi = catchAsync(async (req, res) => {
+  try {
+    const Users = await User.aggregate([
+      { $group: { _id: "$role", count: { $sum: 1 } } },
+    ]);
+
+    const Shipment = await shipment.countDocuments();
+
+    const statusCounts = await shipment.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+
+    let ShipmentData = await shipment
+      .find()
+      .populate([
+        { path: "broker_id", select: "name email" },
+        { path: "shipper_id", select: "name email" },
+        { path: "customer_id", select: "name email" },
+        { path: "driver_id", select: "name email" },
+        { path: "carrier_id", select: "name email" },
+      ])
+      .sort({ created_at: -1 }) // Ensure created_at exists in schema
+      .limit(5);
+
+      if (ShipmentData && ShipmentData.length !== 0) {
+        ShipmentData = ShipmentData.map((shipment) => shipment.toObject());
+  
+        // Fetch driver data for each shipment that has a driver_id
+        await Promise.all(
+          ShipmentData.map(async (shipment) => {
+            if (shipment.driver_id) {
+              const driverData = await Driver.findOne({
+                driver_id_ref: shipment.driver_id._id,
+              });
+              if (driverData) {
+                shipment.driver_id = {
+                  ...shipment.driver_id,
+                  ...driverData.toObject(),
+                };
+              }
+            }
+          })
+        );
+      }
+
+    res.json({
+      status: true,
+      message: "Dashboard fetched successfully",
+      data: { Users, Shipment, statusCounts, ShipmentData },
+    });
+  } catch (error) {
+    console.error("Error occurred:", error);
+    errorResponse(res, error.message || "Failed to fetch profile", 500);
+  }
+});
+
+// Carrier Panel
 exports.createCarrier = catchAsync(async (req, res) => {
   try {
-    console.log("req.user.id",req.user)
+    console.log("req.user.id", req.user);
     const { name, email, role, contact } = req.body;
 
     // Validate required fields
@@ -431,7 +551,7 @@ exports.getCarrier = catchAsync(async (req, res) => {
   }
 });
 
-// Customer Panel 
+// Customer Panel
 exports.createCustomer = catchAsync(async (req, res) => {
   try {
     const { name, email, role, contact, address } = req.body;
@@ -491,7 +611,10 @@ exports.createCustomer = catchAsync(async (req, res) => {
 
 exports.GetCoustomer = catchAsync(async (req, res) => {
   try {
-    const users = await Customer.find().populate("user_id_ref", "-password -__v -created_at -updated_at");
+    const users = await Customer.find().populate(
+      "user_id_ref",
+      "-password -__v -created_at -updated_at"
+    );
     if (!users) {
       return errorResponse(res, "No users found", 404);
     }
@@ -502,7 +625,6 @@ exports.GetCoustomer = catchAsync(async (req, res) => {
 });
 
 // ?Driver
-
 exports.createDriver = catchAsync(async (req, res) => {
   try {
     const { name, email, role, contact, address, vin } = req.body;

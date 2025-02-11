@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { signup, login, createAccount, getUsers, profilegettoken, createCarrier, createCustomer, GetCoustomer ,getCarrier, createDriver, getDriver, resetPassword,  DashboardShipperApi, DashboardApi, DashboardCustomerApi } = require("../controller/authController");
+const { signup, login, createAccount, getUsers, profilegettoken, createCarrier, createCustomer, GetCoustomer ,getCarrier, createDriver, getDriver, resetPassword,  DashboardShipperApi, DashboardApi, DashboardCustomerApi, DashboardAdminApi } = require("../controller/authController");
 const { MarkNotificationAsRead, NotificationGet } = require("../controller/Notification");
 const { checkPermission } = require('../middleware/rbacMiddleware');
 const { verifyToken } = require('../middleware/tokenVerify');
@@ -27,13 +27,13 @@ router.get("/get-notification", verifyToken, NotificationGet);
 
 router.post("/read-notification", verifyToken, MarkNotificationAsRead);
 
-router.get("/dashboard", verifyToken ,DashboardApi);
-
 router.get("/dashboard/shipper", verifyToken ,DashboardShipperApi);
 
 router.get("/dashboard/customer", verifyToken ,DashboardCustomerApi);
 
+router.get("/dashboard/admin", verifyToken ,DashboardAdminApi);
 
+router.get("/dashboard", verifyToken ,DashboardApi);
 
 
 module.exports = router;
