@@ -37,14 +37,24 @@ const upload = multer({
 const uploadFile = (req, res) => {
     return new Promise((resolve, reject) => {
         upload.single('file')(req, res, (err) => {
-            if (err) {
-                reject({ status: false, message: 'File upload failed', error: err.message });
+            if(req.file) {
+                // console.log("File Uploaded Successfully:", req.file);
+                resolve({ status: true, message: "File uploaded successfully", fileUrl: req?.file?.location });
+            }
+            else if (err) {
+                console.error("Multer Error:", err);
+                reject({ status: false, message: "File upload failed", error: err.message });
+            } else if (!req.file) {
+                console.error("No file received");
+                reject({ status: false, message: "No file received" });
             } else {
-                resolve({ status: true, message: 'File uploaded successfully', fileUrl: req.file.location });
+                console.log("File Uploaded Successfully:", req.file);
+                resolve({ status: true, message: "File uploaded successfully", fileUrl: req.file.location });
             }
         });
     });
 };
+
 
 /**
  * Function to delete a file from S3 inside the uploads folder
@@ -77,4 +87,4 @@ const deleteFile = async (fileUrl) => {
     }
 };
 
-module.exports = { uploadFile, deleteFile };
+module.exports = { upload, uploadFile, deleteFile };

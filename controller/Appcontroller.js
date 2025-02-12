@@ -356,49 +356,48 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
 
 exports.updateShipmentSign = catchAsync(async (req, res) => {
     try {
-        console.log("req",req.file);
-        const { customer_sign, driver_sign } = req.file;
+        const type=req?.body?.signType
+
+        if (!req.file) {
+            return errorResponse(res, "No file uploaded", 400, false);
+        }
+
         const Id = req.params.id;
-        let shipments;
-        if (customer_sign) {
-            const result = await uploadFile(req, res);
-            shipments = await shipment.findOneAndUpdate(
+        const result = await uploadFile(req, res); // Upload file to S3
+        const fileUrl = result?.fileUrl;
+
+        if (!fileUrl) {
+            return errorResponse(res, "File upload failed", 500, false);
+        }
+
+        const fieldToUpdate = type === 'customer' ? 'customer_sign' : 'driver_sign';
+        console.log("filedtoUpdate",fieldToUpdate);
+        
+        let updatedShipment;
+        if(fieldToUpdate === "customer_sign"){
+            updatedShipment = await shipment.findOneAndUpdate(
                 { _id: Id },
-                {
-                    customer_sign: result?.fileUrl,
-                },
-                {
-                    new: true,
-                    runValidators: true
-                }
-            );
-        } else if (driver_sign) {
-            const result = await uploadFile(req, res);
-            shipments = await shipment.findOneAndUpdate(
-                { _id: Id },
-                {
-                    driver_sign: result?.fileUrl
-                },
-                {
-                    new: true,
-                    runValidators: true
-                }
+                { [fieldToUpdate]: fileUrl, status:"delivered"},
+                { new: true, runValidators: true }
             );
         }
         else{
-            return errorResponse(res, "No data sent", 400, false);
+            updatedShipment = await shipment.findOneAndUpdate(
+                { _id: Id },
+                { [fieldToUpdate]: fileUrl},
+                { new: true, runValidators: true }
+            );
         }
 
-        if (!shipments) {
+        if (!updatedShipment) {
             return errorResponse(res, "Shipment not found", 404, false);
         }
 
-        return successResponse(res, "Shipment updated successfully", 200, shipments); // Corrected response object
+        return successResponse(res, "Shipment updated successfully", 200, updatedShipment);
     } catch (error) {
         return errorResponse(res, error.message || "Internal Server Error", 500);
     }
 });
-
 
 
 exports.updateDirections = catchAsync(async (req, res) => {

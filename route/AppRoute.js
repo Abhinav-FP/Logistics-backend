@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Appcontroller = require('../controller/Appcontroller');
 const { verifyToken } = require('../middleware/tokenVerify');
+const { upload } = require('../utils/S3'); // Import multer from S3.js
 
 // Route to fetch directions
 router.post('/driver', verifyToken, Appcontroller.UpdateDriver);
@@ -15,6 +16,6 @@ router.get("/get-notification", verifyToken, Appcontroller.NotificationDriverGet
 router.post("/read-notification", verifyToken, Appcontroller.MarkNotificationAsRead);
 router.post("/update_direction", Appcontroller.updateDirections);
 router.get("/shipment_update/:id", Appcontroller.updateShipmentData);
-router.post("/shipment_sign/:id", Appcontroller.updateShipmentSign);
+router.post("/shipment_sign/:id", upload.single('file'), Appcontroller.updateShipmentSign);
 
 module.exports = router;
