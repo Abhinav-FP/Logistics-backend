@@ -9,6 +9,7 @@ const nodemailer = require('nodemailer');
 const NotificationModel = require("../model/Notification");
 const directionModel = require("../model/direction");
 const axios = require('axios');
+const { uploadFile } = require("../utils/S3");
 
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
@@ -355,31 +356,37 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
 
 exports.updateShipmentSign = catchAsync(async (req, res) => {
     try {
+        console.log("req",req.file);
         const { customer_sign, driver_sign } = req.file;
         const Id = req.params.id;
+        let shipments;
         if (customer_sign) {
-            
-            const shipments = await shipment.findOneAndUpdate(
+            const result = await uploadFile(req, res);
+            shipments = await shipment.findOneAndUpdate(
                 { _id: Id },
                 {
-                    customer_sign: customer_sign,
+                    customer_sign: result?.fileUrl,
                 },
                 {
                     new: true,
                     runValidators: true
                 }
             );
-        } else {
-            const shipments = await shipment.findOneAndUpdate(
+        } else if (driver_sign) {
+            const result = await uploadFile(req, res);
+            shipments = await shipment.findOneAndUpdate(
                 { _id: Id },
                 {
-                    driver_sign: driver_sign
+                    driver_sign: result?.fileUrl
                 },
                 {
                     new: true,
                     runValidators: true
                 }
             );
+        }
+        else{
+            return errorResponse(res, "No data sent", 400, false);
         }
 
         if (!shipments) {

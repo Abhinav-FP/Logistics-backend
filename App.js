@@ -5,6 +5,7 @@ require("./dbconfigration");
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const multer = require('multer');
 const corsOptions = {
   origin: "*", // Allowed origins
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -41,7 +42,6 @@ app.get("/", (req, res) => {
 
 // S3 code begins here
 const { S3Client, DeleteObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
-const multer = require('multer');
 const multerS3 = require('multer-s3');
 require('aws-sdk/lib/maintenance_mode_message').suppress = true;
 
