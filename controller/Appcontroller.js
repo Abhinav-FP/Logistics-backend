@@ -185,8 +185,8 @@ exports.forgotlinkrecord = catchAsync(async (req, res) => {
 
 exports.forgotpassword = catchAsync(async (req, res) => {
     try {
-        const { email, newPassword ,Otp} = req.body;
-        const user = await User.findOne({ email: email ,Otp :Otp });
+        const { email, newPassword, Otp } = req.body;
+        const user = await User.findOne({ email: email, Otp: Otp });
         if (!user) {
             return errorResponse(res, "Invalid Email or Otp", 404);
         }
@@ -205,13 +205,13 @@ exports.forgotpassword = catchAsync(async (req, res) => {
 
 exports.forgotOTP = catchAsync(async (req, res) => {
     try {
-        const { Otp ,email } = req.body;
+        const { Otp, email } = req.body;
 
         const user = await User.findOne({ email: email });
         if (!user) {
             return errorResponse(res, "Invalid Emaill", 404);
         }
-       
+
         if (user.Otp !== Otp) {
             return errorResponse(res, "Invalid OTP ", 404);
         }
@@ -326,7 +326,7 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
         const notification = await NotificationModel.findOneAndUpdate(
             { ShipmentId: Id },
             {
-                receiverDriverId:[]
+                receiverDriverId: []
             },
             { new: true }
         );
@@ -335,7 +335,7 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
             {
                 driverAccept: "false",
                 driver_id: null,
-                status : "pending" 
+                status: "pending"
             },
             {
                 new: true,  // Return the updated document
@@ -356,7 +356,7 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
 
 exports.updateShipmentSign = catchAsync(async (req, res) => {
     try {
-        const type=req?.body?.signType
+        const type = req?.body?.signType
 
         if (!req.file) {
             return errorResponse(res, "No file uploaded", 400, false);
@@ -371,20 +371,20 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         }
 
         const fieldToUpdate = type === 'customer' ? 'customer_sign' : 'driver_sign';
-        console.log("filedtoUpdate",fieldToUpdate);
-        
+        console.log("filedtoUpdate", fieldToUpdate);
+
         let updatedShipment;
-        if(fieldToUpdate === "customer_sign"){
+        if (fieldToUpdate === "customer_sign") {
             updatedShipment = await shipment.findOneAndUpdate(
                 { _id: Id },
-                { [fieldToUpdate]: fileUrl, status:"delivered"},
+                { [fieldToUpdate]: fileUrl, status: "delivered" },
                 { new: true, runValidators: true }
             );
         }
-        else{
+        else {
             updatedShipment = await shipment.findOneAndUpdate(
                 { _id: Id },
-                { [fieldToUpdate]: fileUrl},
+                { [fieldToUpdate]: fileUrl },
                 { new: true, runValidators: true }
             );
         }
@@ -428,7 +428,7 @@ exports.updateDirections = catchAsync(async (req, res) => {
 
         const locationData = geocodeResponse.data.results[0].geometry.location;
         CurrentLocation = {
-            location : geocodeResponse.data.results[0].formatted_address,
+            location: geocodeResponse.data.results[0].formatted_address,
             lat: locationData.lat,
             lng: locationData.lng,
         };
@@ -476,7 +476,7 @@ exports.updateDirections = catchAsync(async (req, res) => {
                 {
                     $set: {
                         EndLocation: {
-                            location:EndLocation.location ,
+                            location: EndLocation.location,
                             lat: EndLocation.lat,
                             lng: EndLocation.lng,
                             distance: currentToEndLeg.distance.text,
@@ -489,7 +489,7 @@ exports.updateDirections = catchAsync(async (req, res) => {
                         CurrentLocation: {
                             lat: CurrentLocation.lat,
                             lng: CurrentLocation.lng,
-                            location: CurrentLocation.location ,
+                            location: CurrentLocation.location,
                             distance: startToCurrentLeg.distance.text,
                             duration: startToCurrentLeg.duration.text,
                             polyline: startToCurrentResponse.data.routes[0].overview_polyline.points,
