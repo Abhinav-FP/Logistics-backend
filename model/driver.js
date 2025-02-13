@@ -14,10 +14,10 @@ const driverSchema = new mongoose.Schema({
     type: String,
     required: [true, "VIN number is required"],
   },
-  trucktype: {
-    type: String,
-    default : null
-  },
+  // trucktype: {
+  //   type: String,
+  //   default : null
+  // },
   company_name :{
     type: String,
 default :null

@@ -83,6 +83,10 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     required: [true, "Type of goods is required"],
   },
+  uploadedBol: {
+    type: String,
+    default: null
+  },
   driverAccept: {
     type: String,
     default: null,

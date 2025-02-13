@@ -9,6 +9,7 @@ const nodemailer = require('nodemailer');
 const NotificationModel = require("../model/Notification");
 const directionModel = require("../model/direction");
 const axios = require('axios');
+const { uploadFile } = require("../utils/S3");
 
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
@@ -355,43 +356,48 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
 
 exports.updateShipmentSign = catchAsync(async (req, res) => {
     try {
-        const { customer_sign, driver_sign } = req.file;
+        const type=req?.body?.signType
+
+        if (!req.file) {
+            return errorResponse(res, "No file uploaded", 400, false);
+        }
+
         const Id = req.params.id;
-        if (customer_sign) {
-            
-            const shipments = await shipment.findOneAndUpdate(
+        const result = await uploadFile(req, res); // Upload file to S3
+        const fileUrl = result?.fileUrl;
+
+        if (!fileUrl) {
+            return errorResponse(res, "File upload failed", 500, false);
+        }
+
+        const fieldToUpdate = type === 'customer' ? 'customer_sign' : 'driver_sign';
+        console.log("filedtoUpdate",fieldToUpdate);
+        
+        let updatedShipment;
+        if(fieldToUpdate === "customer_sign"){
+            updatedShipment = await shipment.findOneAndUpdate(
                 { _id: Id },
-                {
-                    customer_sign: customer_sign,
-                },
-                {
-                    new: true,
-                    runValidators: true
-                }
+                { [fieldToUpdate]: fileUrl, status:"delivered"},
+                { new: true, runValidators: true }
             );
-        } else {
-            const shipments = await shipment.findOneAndUpdate(
+        }
+        else{
+            updatedShipment = await shipment.findOneAndUpdate(
                 { _id: Id },
-                {
-                    driver_sign: driver_sign
-                },
-                {
-                    new: true,
-                    runValidators: true
-                }
+                { [fieldToUpdate]: fileUrl},
+                { new: true, runValidators: true }
             );
         }
 
-        if (!shipments) {
+        if (!updatedShipment) {
             return errorResponse(res, "Shipment not found", 404, false);
         }
 
-        return successResponse(res, "Shipment updated successfully", 200, shipments); // Corrected response object
+        return successResponse(res, "Shipment updated successfully", 200, updatedShipment);
     } catch (error) {
         return errorResponse(res, error.message || "Internal Server Error", 500);
     }
 });
-
 
 
 exports.updateDirections = catchAsync(async (req, res) => {

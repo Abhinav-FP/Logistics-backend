@@ -2,8 +2,9 @@ const router = require("express").Router();
 const { updateShipment, getShipment, getBOL, createShipment, deleteShipment, getShipmentofBroker, getShipmentofCarrier, getShipmentofCustomer, updateShipmentData, getShipmentofShipper } = require("../controller/shipmentController");
 const { checkPermission } = require('../middleware/rbacMiddleware');
 const { verifyToken } = require('../middleware/tokenVerify');
+const { upload } = require("../utils/S3");
 
-router.post("/create", verifyToken, checkPermission('create-shipment'), createShipment);
+router.post("/create", verifyToken, checkPermission('create-shipment'), upload.single('file'), createShipment);
 router.post("/update/:id", verifyToken, checkPermission('update-shipment'), updateShipment);
 router.post("/shipment_update/:id", verifyToken, checkPermission('update-shipment'), updateShipmentData);
 

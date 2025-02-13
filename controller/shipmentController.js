@@ -8,6 +8,7 @@ const notification = require("../model/Notification")
 const BOL = require("../Email/bol.js");
 const { createNotification, updateNotification, updateStatusNotification } = require('./Notification.js'); // Import the Notification function
 const { AddDirection } = require('./directionsController.js');
+const { uploadFile } = require('../utils/S3.js');
 // const puppeteer = require('puppeteer');
 // var Promise = require('bluebird');
 // const hb = require('handlebars');
@@ -71,7 +72,7 @@ exports.createShipment = catchAsync(async (req, res) => {
       "typeOfGoods",
       "current_location"
     ];
-
+    console.log("req.body",req.body);
     // Check for missing required fields
     const missingFields = requiredFields.filter((field) => !req.body[field]);
     const shipper_id = req?.user?.id || null;
@@ -84,6 +85,7 @@ exports.createShipment = catchAsync(async (req, res) => {
         false
       );
     }
+  
 
     const shipmentData = {};
     const schemaFields = Object.keys(Shipment.schema.paths);
@@ -95,6 +97,17 @@ exports.createShipment = catchAsync(async (req, res) => {
     });
 
     shipmentData.shipper_id = shipper_id;
+
+    // Add fileUrl to uploadedBol if available
+    let fileUrl;
+    if (req.file) {
+      const result = await uploadFile(req, res); // Upload file to S3
+      fileUrl = result?.fileUrl;
+    }
+    if (fileUrl) {
+      console.log("Hello");
+      shipmentData.uploadedBol = fileUrl;
+    }
 
     const shipment = await Shipment.create(shipmentData);
     await createNotification({
