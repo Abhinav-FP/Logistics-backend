@@ -4,7 +4,6 @@ const catchAsync = require("../utils/catchAsync")
 
 
 exports.AddDirection = catchAsync(async (req, res) => {
-    console.log("req.body",req.body)
     let { pickup_location, drop_location, current_location, Shipment_id } = req.body;
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
@@ -94,7 +93,6 @@ exports.AddDirection = catchAsync(async (req, res) => {
 
             const data = await result.save();
           
-            console.log("sj" , data)
         } 
     } catch (error) {
         console.error('Error:', error.message);

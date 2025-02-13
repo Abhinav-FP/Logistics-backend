@@ -63,7 +63,6 @@ exports.login = catchAsync(async (req, res) => {
   //   console.error('Error syncing indexes:', err.message);
   // });
 
-  console.log("req",req.body);
   try {
     const { email, password } = req.body;
 
@@ -472,7 +471,6 @@ exports.DashboardAdminApi = catchAsync(async (req, res) => {
 // Carrier Panel
 exports.createCarrier = catchAsync(async (req, res) => {
   try {
-    console.log("req.user.id", req.user);
     const { name, email, role, contact } = req.body;
 
     // Validate required fields

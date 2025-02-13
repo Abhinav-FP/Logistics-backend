@@ -72,7 +72,6 @@ exports.createShipment = catchAsync(async (req, res) => {
       "typeOfGoods",
       "current_location"
     ];
-    console.log("req.body",req.body);
     // Check for missing required fields
     const missingFields = requiredFields.filter((field) => !req.body[field]);
     const shipper_id = req?.user?.id || null;
@@ -105,7 +104,6 @@ exports.createShipment = catchAsync(async (req, res) => {
       fileUrl = result?.fileUrl;
     }
     if (fileUrl) {
-      console.log("Hello");
       shipmentData.uploadedBol = fileUrl;
     }
 
@@ -347,7 +345,6 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
       { path: "driver_id", select: "name email contact" },
       { path: "carrier_id", select: "name email contact" }]
     ).sort({ created_at: -1 });
-    console.log("shipment",shipment);
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }

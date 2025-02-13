@@ -343,7 +343,6 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
             }
         );
 
-        console.log("shipments", shipments)
         if (!shipments) {
             return errorResponse(res, "Shipment not found", 404, false);
         }
@@ -371,7 +370,6 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         }
 
         const fieldToUpdate = type === 'customer' ? 'customer_sign' : 'driver_sign';
-        console.log("filedtoUpdate", fieldToUpdate);
 
         let updatedShipment;
         if (fieldToUpdate === "customer_sign") {
