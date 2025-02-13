@@ -63,13 +63,14 @@ exports.login = catchAsync(async (req, res) => {
   //   console.error('Error syncing indexes:', err.message);
   // });
 
+  console.log("req",req.body);
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(401).json({
         status: false,
-        message: "Username and password are required",
+        message: "Email and password are required",
       });
     }
 

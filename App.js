@@ -5,7 +5,6 @@ require("./dbconfigration");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const multer = require('multer');
 const corsOptions = {
   origin: "*", // Allowed origins
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -14,6 +13,10 @@ const corsOptions = {
   optionsSuccessStatus: 200, // for legacy browsers
 }
 
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '2000mb' }));
+app.use(express.urlencoded({ extended: true, limit: "2000mb" }));
+
 // const logger = require("./utils/Logger");
 
 const UserRoute = require("./route/userRoutes");
@@ -21,18 +24,15 @@ const ShipmentRoute = require("./route/shipmentRoutes");
 const PlaceRoute = require("./route/directionRoutes");
 const Approute =require("./route/AppRoute")
 
-// Multer Storage (No Local Saving, Direct to Memory)
-const storage = multer.memoryStorage();
-
-const upload = multer({ storage });
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '2000mb' }));
-app.use(express.urlencoded({ extended: true, limit: "2000mb" }));
-
 app.use("/user", UserRoute);
 app.use("/shipment", ShipmentRoute);
 app.use("/place" ,PlaceRoute)
 app.use("/app" , Approute)
+// Multer Storage (No Local Saving, Direct to Memory)
+// const multer = require('multer');
+// const storage = multer.memoryStorage();
+
+// const upload = multer({ storage });
 
 const PORT = process.env.REACT_APP_SERVER_DOMIN;
 
