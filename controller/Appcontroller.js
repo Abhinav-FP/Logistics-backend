@@ -3,7 +3,7 @@ const shipment = require("../model/shipment");
 const User = require("../model/user");
 const catchAsync = require("../utils/catchAsync");
 const jwt = require("jsonwebtoken");
-const { errorResponse, successResponse, validationErrorResponse } = require("../utils/ErrorHandling");
+const { ApperrorResponses, successResponse, validationErrorResponse } = require("../utils/ErrorHandling");
 const Otp = require("../Email/Otp");
 const nodemailer = require('nodemailer');
 const NotificationModel = require("../model/Notification");
@@ -30,10 +30,10 @@ exports.login = catchAsync(async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return errorResponse(res, "Invalid email", 401);
+            return ApperrorResponses(res, "Invalid email", 401);
         }
         if (user?.role !== "driver") {
-            return errorResponse(
+            return ApperrorResponses(
                 res,
                 "Only drivers are allowed to login on the app",
                 401,
@@ -42,7 +42,7 @@ exports.login = catchAsync(async (req, res) => {
         }
 
         if (password != user.password) {
-            return errorResponse(res, "Invalid password", 401);
+            return ApperrorResponses(res, "Invalid password", 401);
         }
 
         const token = jwt.sign(
@@ -60,7 +60,7 @@ exports.login = catchAsync(async (req, res) => {
             user: userObject,
         });
     } catch (error) {
-        return errorResponse(res, error.message || "Internal Server Error", 500);
+        return ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 });
 
@@ -68,12 +68,12 @@ exports.login = catchAsync(async (req, res) => {
 exports.UpdateDriver = catchAsync(async (req, res) => {
     try {
         if (!req.user.id) {
-            return errorResponse(res, "No users found", 404);
+            return ApperrorResponses(res, "No users found", 404);
         }
         const { driver_name, mc_number, company_name } = req.body;
         const driverResult = await Driver.findOne({ driver_id_ref: req.user.id });
         if (!driverResult) {
-            return errorResponse(res, "Driver already exists.", 400);
+            return ApperrorResponses(res, "Driver already exists.", 400);
         }
         const DriverRecord = await Driver.findByIdAndUpdate(driverResult?._id, {
             mc_number: mc_number,
@@ -85,9 +85,9 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
         successResponse(res, "Driver update successfully!", 201,);
     } catch (error) {
         if (error.code === 11000) {
-            return errorResponse(res, "Email already exists.", 400);
+            return ApperrorResponses(res, "Email already exists.", 400);
         }
-        errorResponse(res, error.message || "Internal Server Error", 500);
+        ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 });
 
@@ -95,13 +95,13 @@ exports.GetDrivers = catchAsync(async (req, res) => {
     try {
         const UserId = req.user.id;
         if (!UserId) {
-            return errorResponse(res, "No users found", 404);
+            return ApperrorResponses(res, "No users found", 404);
         }
         const driverResult = await Driver.findOne({ driver_id_ref: UserId });
         const UserResult = await User.findOne({ _id: UserId }).select("name");
 
         if (!driverResult) {
-            return errorResponse(res, "Driver already exists.", 400);
+            return ApperrorResponses(res, "Driver already exists.", 400);
         }
         if (driverResult) {
             successResponse(res, "Driver Get successful!", 201, {
@@ -111,9 +111,9 @@ exports.GetDrivers = catchAsync(async (req, res) => {
         }
     } catch (error) {
         if (error.code === 11000) {
-            return errorResponse(res, "Email already exists.", 400);
+            return ApperrorResponses(res, "Email already exists.", 400);
         }
-        errorResponse(res, error.message || "Internal Server Error", 500);
+        ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 });
 
@@ -131,13 +131,13 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
             Shipment_id: shipments._id,
         });
         if (!shipments) {
-            return errorResponse(res, "Shipment not found", 404);
+            return ApperrorResponses(res, "Shipment not found", 404);
         }
         successResponse(res, "Shipment fetched successfully", 200, {
             directionGet, shipments
         });
     } catch (error) {
-        return errorResponse(res, error.message || "Internal Server Error", 500);
+        return ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 })
 
@@ -149,7 +149,7 @@ exports.forgotlinkrecord = catchAsync(async (req, res) => {
         }
         const record = await User.findOne({ email: email });
         if (!record) {
-            return errorResponse(res, "No user found with this email", 404);
+            return ApperrorResponses(res, "No user found with this email", 404);
         }
         const customerUser = record.name;
         const OTP = generateOTP();
@@ -178,7 +178,7 @@ exports.forgotlinkrecord = catchAsync(async (req, res) => {
     } catch (error) {
         console.error("Error in forgot password process:", error);
         // logger.error("Error in forgot password process:", error);
-        return errorResponse(res, "Failed to send email");
+        return ApperrorResponses(res, "Failed to send email");
     }
 }
 );
@@ -188,17 +188,17 @@ exports.forgotpassword = catchAsync(async (req, res) => {
         const { email, newPassword ,Otp} = req.body;
         const user = await User.findOne({ email: email ,Otp :Otp });
         if (!user) {
-            return errorResponse(res, "Invalid Email or Otp", 404);
+            return ApperrorResponses(res, "Invalid Email or Otp", 404);
         }
         user.password = newPassword
         await user.save();
         return successResponse(res, "Password has been successfully reset");
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            return errorResponse(res, "Token has expired. Please generate a new token.", 401);
+            return ApperrorResponses(res, "Token has expired. Please generate a new token.", 401);
         }
         console.error("Error in password reset process:", error);
-        return errorResponse(res, "Failed to reset password");
+        return ApperrorResponses(res, "Failed to reset password");
     }
 }
 );
@@ -209,21 +209,21 @@ exports.forgotOTP = catchAsync(async (req, res) => {
 
         const user = await User.findOne({ email: email });
         if (!user) {
-            return errorResponse(res, "Invalid Emaill", 404);
+            return ApperrorResponses(res, "Invalid Emaill", 404);
         }
        
         if (user.Otp !== Otp) {
-            return errorResponse(res, "Invalid OTP ", 404);
+            return ApperrorResponses(res, "Invalid OTP ", 404);
         }
         user.OtpVerify = true;
         await user.save();
         return successResponse(res, "OTP verified successfully");
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            return errorResponse(res, "Token has expired. Please generate a new token.", 401);
+            return ApperrorResponses(res, "Token has expired. Please generate a new token.", 401);
         }
         console.error("Error in OTP verification process:", error);
-        return errorResponse(res, "Failed to verify OTP", 500);
+        return ApperrorResponses(res, "Failed to verify OTP", 500);
     }
 });
 
@@ -345,12 +345,12 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
 
         console.log("shipments", shipments)
         if (!shipments) {
-            return errorResponse(res, "Shipment not found", 404, false);
+            return ApperrorResponses(res, "Shipment not found", 404, false);
         }
 
         return successResponse(res, "Shipment Cancelled successfully", 200, shipments); // Corrected response object
     } catch (error) {
-        return errorResponse(res, error.message || "Internal Server Error", 500);
+        return ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 });
 
@@ -359,7 +359,7 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         const type=req?.body?.signType
 
         if (!req.file) {
-            return errorResponse(res, "No file uploaded", 400, false);
+            return ApperrorResponses(res, "No file uploaded", 400, false);
         }
 
         const Id = req.params.id;
@@ -367,7 +367,7 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         const fileUrl = result?.fileUrl;
 
         if (!fileUrl) {
-            return errorResponse(res, "File upload failed", 500, false);
+            return ApperrorResponses(res, "File upload failed", 500, false);
         }
 
         const fieldToUpdate = type === 'customer' ? 'customer_sign' : 'driver_sign';
@@ -390,12 +390,12 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         }
 
         if (!updatedShipment) {
-            return errorResponse(res, "Shipment not found", 404, false);
+            return ApperrorResponses(res, "Shipment not found", 404, false);
         }
 
         return successResponse(res, "Shipment updated successfully", 200, updatedShipment);
     } catch (error) {
-        return errorResponse(res, error.message || "Internal Server Error", 500);
+        return ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 });
 
