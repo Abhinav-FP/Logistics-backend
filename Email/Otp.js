@@ -53,12 +53,12 @@ module.exports = (otp, userName) => {
     </table>
   </td>
 </tr>
-<tr bgcolor="#141414">
+<tr bgcolor="#ffffff">
   <td style="padding: 15px 0 5px 0;border-top:1px solid #444444">
     <p style="margin: 1px; font-size: 14px; font-weight: normal; color:#000000;  text-align: center;"> Copyright (C) 2024 invite. All rights reserved. </p>
   </td>
 </tr>
-<tr bgcolor="#141414">
+<tr bgcolor="#ffffff">
   <td style="padding: 0 0 15px 0;">
     <p style="margin: 1px; font-size: 14px; font-weight: normal; color:#000000;  text-align: center;"> You are receiving this email because you requested an OTP for your account verification. </p>
   </td>
