@@ -4,7 +4,7 @@ exports.verifyToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Token missing or invalid' });
+      return res.status(401).json({ message: 'Token missing or invalid' });
     }
 
     const token = authHeader.split(' ')[1];
@@ -14,6 +14,6 @@ exports.verifyToken = (req, res, next) => {
     next(); 
   } catch (error) {
     // console.error("Token verification error:", error);
-    return res.status(401).json({ error: 'Invalid or expired token' });
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
