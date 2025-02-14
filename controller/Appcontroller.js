@@ -211,6 +211,9 @@ exports.forgotOTP = catchAsync(async (req, res) => {
         if (!user) {
             return ApperrorResponses(res, "Invalid Emaill", 404);
         }
+        console.log(
+            "user",user
+        )
 
         if (user.Otp !== Otp) {
             return ApperrorResponses(res, "Invalid OTP ", 404);
