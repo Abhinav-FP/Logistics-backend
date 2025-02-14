@@ -10,10 +10,10 @@ router.post("/shipment_update/:id", verifyToken, checkPermission('update-shipmen
 
 router.get("/delete/:id", verifyToken, checkPermission('update-shipment'), deleteShipment);
 router.get("/get/:id?", verifyToken, checkPermission('view-shipment'), getShipment);
-router.get("/get-shipment-shipper", verifyToken, checkPermission('view-shipment'), getShipmentofShipper);
-router.get("/get-shipment-broker", verifyToken, checkPermission('view-shipment'), getShipmentofBroker);
-router.get("/get-shipment-carrier", verifyToken, checkPermission('view-shipment'), getShipmentofCarrier);
-router.get("/get-shipment-customer", verifyToken, checkPermission('view-shipment'), getShipmentofCustomer);
+router.get("/get-shipment-shipper/:status?", verifyToken, checkPermission('view-shipment'), getShipmentofShipper);
+router.get("/get-shipment-broker/:status?", verifyToken, checkPermission('view-shipment'), getShipmentofBroker);
+router.get("/get-shipment-carrier/:status?", verifyToken, checkPermission('view-shipment'), getShipmentofCarrier);
+router.get("/get-shipment-customer/:status?", verifyToken, checkPermission('view-shipment'), getShipmentofCustomer);
 // router.get("/get-bol",verifyToken, checkPermission('view-shipment'), getBOL);
 router.get("/get-bol/:id", getBOL);
 
