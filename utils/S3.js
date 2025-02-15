@@ -37,7 +37,7 @@ const upload = multer({
 const uploadFile = (req, res) => {
     return new Promise((resolve, reject) => {
         upload.single('file')(req, res, (err) => {
-            if(req.file) {
+            if (req.file) {
                 // console.log("File Uploaded Successfully:", req.file);
                 resolve({ status: true, message: "File uploaded successfully", fileUrl: req?.file?.location });
             }
