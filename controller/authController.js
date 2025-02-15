@@ -662,14 +662,14 @@ exports.createDriver = catchAsync(async (req, res) => {
     const driverResult = await driverRecord.save();
 
     if (driverResult) {
-      successResponse(res, "Customer created successfully!", 201, {
+      successResponse(res, "Driver created successfully!", 201, {
         user: userResult,
         customer: driverResult,
       });
     } else {
       // Rollback user creation if carrier creatison fails
       await User.findByIdAndDelete(userResult._id);
-      errorResponse(res, "Failed to create customer.", 500);
+      errorResponse(res, "Failed to create driver.", 500);
     }
   } catch (error) {
     if (error.code === 11000) {

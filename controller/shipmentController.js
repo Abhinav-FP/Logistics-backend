@@ -174,7 +174,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
     });
 
     if (updateData.carrier_id) {
-      return successResponse(res, "Shipment Carrier Add successfully", 200, shipment);
+      return successResponse(res, "Carrier Add successfully", 200, shipment);
     }
 
     if (updateData.review) {
@@ -182,7 +182,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
     }
 
     if (updateData.driver_id) {
-      return successResponse(res, "Shipment Driver Add successfully", 200, shipment);
+      return successResponse(res, "Driver Add successfully", 200, shipment);
     }
     if (updateData.customer_id) {
       return successResponse(res, "Shipment Update successfully", 200, shipment);
@@ -274,7 +274,13 @@ exports.getShipment = catchAsync(async (req, res) => {
 
 exports.getShipmentofShipper = catchAsync(async (req, res) => {
   try {
-    let shipment = await Shipment.find({ shipper_id: req.user.id }).populate([
+    const {status} = req.params;
+    // console.log("status",status);
+    let query = { shipper_id: req.user.id };
+    if (status !== undefined && status !== "") {
+      query.status = status;
+    }
+    let shipment = await Shipment.find(query).populate([
       { path: "broker_id", select: "name email contact" },
       { path: "shipper_id", select: "name email contact" },
       { path: "customer_id", select: "name email contact" },
@@ -306,7 +312,13 @@ exports.getShipmentofShipper = catchAsync(async (req, res) => {
 
 exports.getShipmentofBroker = catchAsync(async (req, res) => {
   try {
-    let shipment = await Shipment.find({ broker_id: req.user.id }).populate([
+    const {status} = req.params;
+    // console.log("status",status);
+    let query = {broker_id: req.user.id };
+    if (status !== undefined && status !== "") {
+      query.status = status;
+    }
+    let shipment = await Shipment.find(query).populate([
       { path: "broker_id", select: "name email contact" },
       { path: "shipper_id", select: "name email contact" },
       { path: "customer_id", select: "name email contact" },
@@ -338,7 +350,13 @@ exports.getShipmentofBroker = catchAsync(async (req, res) => {
 
 exports.getShipmentofCarrier = catchAsync(async (req, res) => {
   try {
-    let shipment = await Shipment.find({ carrier_id: req.user.id }).populate([
+    const {status} = req.params;
+    // console.log("status",status);
+    let query = { carrier_id: req.user.id };
+    if (status !== undefined && status !== "") {
+      query.status = status;
+    }
+    let shipment = await Shipment.find(query).populate([
       { path: "broker_id", select: "name email contact" },
       { path: "shipper_id", select: "name email contact" },
       { path: "customer_id", select: "name email contact" },
@@ -370,7 +388,13 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
 
 exports.getShipmentofCustomer = catchAsync(async (req, res) => {
   try {
-    let shipment = await Shipment.find({ customer_id: req.user.id }).populate([
+    const {status} = req.params;
+    // console.log("status",status);
+    let query = { customer_id: req.user.id };
+    if (status !== undefined && status !== "") {
+      query.status = status;
+    }
+    let shipment = await Shipment.find(query).populate([
       { path: "broker_id", select: "name email contact" },
       { path: "shipper_id", select: "name email contact" },
       { path: "customer_id", select: "name email contact" },
