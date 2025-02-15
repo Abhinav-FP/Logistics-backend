@@ -16,27 +16,27 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     required: [true, "Role is required"],
-    enum: ['admin', 'customer' , "driver" , "carrier" ,"broker" , "shipper"],
+    enum: ['admin', 'customer', "driver", "carrier", "broker", "shipper"],
   },
   contact: {
     type: String,
     required: [true, "Contact is required"],
   },
-  Otp : {
+  Otp: {
     type: Number,
     default: null,
   },
-  OtpVerify:{
+  OtpVerify: {
     type: Boolean,
     default: false,
   },
-  created_by: { 
+  created_by: {
     type: String,
     default: null,
   },
 });
 
-userSchema.index({ email: 1 }, { unique: [true, 'Unique email is required!' ]});
+userSchema.index({ email: 1 }, { unique: [true, 'Unique email is required!'] });
 
 const User = mongoose.model('User', userSchema);
 

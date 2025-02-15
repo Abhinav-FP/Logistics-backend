@@ -1,7 +1,7 @@
 const User = require("../model/user");
 const mongoose = require("mongoose");
 const Driver = require("../model/driver");
-const {errorResponse} = require("../utils/ErrorHandling");
+const { errorResponse } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 const shipment = require("../model/shipment");
 

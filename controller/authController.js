@@ -5,11 +5,7 @@ const Customer = require("../model/customer");
 const Driver = require("../model/driver");
 const generator = require("generate-password");
 const jwt = require("jsonwebtoken");
-const {
-  validationErrorResponse,
-  errorResponse,
-  successResponse,
-} = require("../utils/ErrorHandling");
+const { errorResponse, successResponse } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 const shipment = require("../model/shipment");
 

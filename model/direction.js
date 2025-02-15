@@ -23,7 +23,7 @@ const directionsSchema = mongoose.Schema({
             type: String,
             required: true
         },
-        location:{
+        location: {
             type: String,
             required: true
         },
@@ -37,7 +37,7 @@ const directionsSchema = mongoose.Schema({
             type: Number,
             required: true
         },
-        location:{
+        location: {
             type: String,
             required: true
         },
@@ -67,7 +67,7 @@ const directionsSchema = mongoose.Schema({
             type: Number,
             required: true
         },
-        location:{
+        location: {
             type: String,
             required: true
         },

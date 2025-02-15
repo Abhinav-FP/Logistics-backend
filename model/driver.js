@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const driverSchema = new mongoose.Schema({
-    driver_id_ref: {
+  driver_id_ref: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: [true, "Driver id reference is required"],
@@ -18,13 +18,13 @@ const driverSchema = new mongoose.Schema({
   //   type: String,
   //   default : null
   // },
-  company_name :{
+  company_name: {
     type: String,
-default :null
+    default: null
   },
-  mc_number :{
+  mc_number: {
     type: String,
-    default :null
+    default: null
   }
 });
 

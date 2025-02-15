@@ -275,7 +275,6 @@ exports.getShipment = catchAsync(async (req, res) => {
 exports.getShipmentofShipper = catchAsync(async (req, res) => {
   try {
     const {status} = req.params;
-    // console.log("status",status);
     let query = { shipper_id: req.user.id };
     if (status !== undefined && status !== "") {
       query.status = status;
@@ -313,7 +312,6 @@ exports.getShipmentofShipper = catchAsync(async (req, res) => {
 exports.getShipmentofBroker = catchAsync(async (req, res) => {
   try {
     const {status} = req.params;
-    // console.log("status",status);
     let query = {broker_id: req.user.id };
     if (status !== undefined && status !== "") {
       query.status = status;
@@ -351,7 +349,6 @@ exports.getShipmentofBroker = catchAsync(async (req, res) => {
 exports.getShipmentofCarrier = catchAsync(async (req, res) => {
   try {
     const {status} = req.params;
-    // console.log("status",status);
     let query = { carrier_id: req.user.id };
     if (status !== undefined && status !== "") {
       query.status = status;
@@ -389,7 +386,6 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
 exports.getShipmentofCustomer = catchAsync(async (req, res) => {
   try {
     const {status} = req.params;
-    // console.log("status",status);
     let query = { customer_id: req.user.id };
     if (status !== undefined && status !== "") {
       query.status = status;

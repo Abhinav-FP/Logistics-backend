@@ -64,7 +64,7 @@ exports.AddDirection = catchAsync(async (req, res) => {
 
             const result = new directionModel({
                 StartLocation: {
-                    location:pickup_location ,
+                    location: pickup_location,
                     lat: StartLocation.lat,
                     lng: StartLocation.lng,
                     distination: startToEndLeg.distance.text,
@@ -72,7 +72,7 @@ exports.AddDirection = catchAsync(async (req, res) => {
                     startToEndPolyline: startToEndResponse.data.routes[0].overview_polyline.points,
                 },
                 CurrentLocation: {
-                    location:pickup_location ,
+                    location: pickup_location,
                     lat: CurrentLocation.lat,
                     lng: CurrentLocation.lng,
                     distination: startToCurrentLeg.distance.text,
@@ -92,11 +92,11 @@ exports.AddDirection = catchAsync(async (req, res) => {
             });
 
             const data = await result.save();
-          
-        } 
+
+        }
     } catch (error) {
         console.error('Error:', error.message);
-        console.log("error" , error)
+        console.log("error", error)
     }
 });
 

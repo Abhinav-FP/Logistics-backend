@@ -91,18 +91,18 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  customer_sign :{
+  customer_sign: {
     type: String,
-    default :null
-    
+    default: null
+
   },
-  driver_sign:{
+  driver_sign: {
     type: String,
-    default :null
+    default: null
   },
-  review:{
+  review: {
     type: String,
-    default :null
+    default: null
   },
   created_at: {
     type: Date,

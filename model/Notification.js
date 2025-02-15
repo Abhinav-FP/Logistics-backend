@@ -45,7 +45,7 @@ const NotificationSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
     }
-  }] , 
+  }],
   receiverDriverId: [{
     Receiver: {
       type: mongoose.Schema.Types.ObjectId,
@@ -55,7 +55,7 @@ const NotificationSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
     }
-  }] , 
+  }],
   ShipmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Shipment",
