@@ -3,7 +3,7 @@ const shipment = require("../model/shipment");
 const User = require("../model/user");
 const catchAsync = require("../utils/catchAsync");
 const jwt = require("jsonwebtoken");
-const { ApperrorResponses, successResponse, validationErrorResponse } = require("../utils/ErrorHandling");
+const {ApperrorResponses, successResponse, validationErrorResponse} = require("../utils/ErrorHandling");
 const Otp = require("../Email/Otp");
 const nodemailer = require('nodemailer');
 const NotificationModel = require("../model/Notification");
@@ -14,7 +14,6 @@ const { uploadFile } = require("../utils/S3");
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
 }
-
 
 exports.login = catchAsync(async (req, res) => {
     try {
@@ -63,7 +62,6 @@ exports.login = catchAsync(async (req, res) => {
         return ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 });
-
 
 exports.UpdateDriver = catchAsync(async (req, res) => {
     try {
@@ -319,7 +317,6 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     }
 });
 
-
 exports.updateShipmentData = catchAsync(async (req, res) => {
     try {
         const Id = req.params.id;
@@ -397,10 +394,8 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
     }
 });
 
-
 exports.updateDirections = catchAsync(async (req, res) => {
     let { Shipment_id, CurrentLocation } = req.body;
-
     try {
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
