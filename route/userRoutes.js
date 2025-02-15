@@ -1,17 +1,58 @@
 const router = require("express").Router();
-const { signup, login, createAccount, getUsers, profilegettoken, createCarrier, createCustomer, GetCoustomer, getCarrier, createDriver, getDriver, resetPassword } = require("../controller/authController");
-const { DashboardApi, DashboardShipperApi, DashboardAdminApi, DashboardCustomerApi } = require("../controller/Dashboardcontroller");
-const { MarkNotificationAsRead, NotificationGet } = require("../controller/Notification");
-const { checkPermission } = require('../middleware/rbacMiddleware');
-const { verifyToken } = require('../middleware/tokenVerify');
+const {
+  signup,
+  login,
+  createAccount,
+  getUsers,
+  profilegettoken,
+  createCarrier,
+  createCustomer,
+  GetCoustomer,
+  getCarrier,
+  createDriver,
+  getDriver,
+  resetPassword,
+} = require("../controller/authController");
+const {
+  DashboardApi,
+  DashboardShipperApi,
+  DashboardAdminApi,
+  DashboardCustomerApi,
+} = require("../controller/Dashboardcontroller");
+const {
+  MarkNotificationAsRead,
+  NotificationGet,
+} = require("../controller/Notification");
+const { checkPermission } = require("../middleware/rbacMiddleware");
+const { verifyToken } = require("../middleware/tokenVerify");
 router.post("/signup", signup);
 router.post("/login", login);
 
 // Route for creating account
-router.post("/create-account", verifyToken, checkPermission('create_account'), createAccount);
-router.post("/create-carrier", verifyToken, checkPermission('create_account'), createCarrier);
-router.post("/create-customer", verifyToken, checkPermission('create_account'), createCustomer);
-router.post("/create-driver", verifyToken, checkPermission('create_account'), createDriver);
+router.post(
+  "/create-account",
+  verifyToken,
+  checkPermission("create_account"),
+  createAccount
+);
+router.post(
+  "/create-carrier",
+  verifyToken,
+  checkPermission("create_account"),
+  createCarrier
+);
+router.post(
+  "/create-customer",
+  verifyToken,
+  checkPermission("create_account"),
+  createCustomer
+);
+router.post(
+  "/create-driver",
+  verifyToken,
+  checkPermission("create_account"),
+  createDriver
+);
 
 router.post("/reset-password", verifyToken, resetPassword);
 
@@ -34,6 +75,5 @@ router.get("/dashboard/customer", verifyToken, DashboardCustomerApi);
 router.get("/dashboard/admin", verifyToken, DashboardAdminApi);
 
 router.get("/dashboard", verifyToken, DashboardApi);
-
 
 module.exports = router;
