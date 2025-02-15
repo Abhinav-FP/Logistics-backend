@@ -174,15 +174,15 @@ exports.updateShipment = catchAsync(async (req, res) => {
     });
 
     if (updateData.carrier_id) {
-      return successResponse(res, "Carrier Add successfully", 200, shipment);
+      return successResponse(res, "Carrier Assigned successfully", 200, shipment);
     }
 
     if (updateData.review) {
-      return successResponse(res, "Review added successfully", 200, shipment);
+      return successResponse(res, "Review Add successfully", 200, shipment);
     }
 
     if (updateData.driver_id) {
-      return successResponse(res, "Driver Add successfully", 200, shipment);
+      return successResponse(res, "Driver Assigned successfully", 200, shipment);
     }
     if (updateData.customer_id) {
       return successResponse(res, "Shipment Update successfully", 200, shipment);
