@@ -552,7 +552,6 @@ exports.updateDirections = catchAsync(async (req, res) => {
     }
 });
 
-
 exports.DashboardDriverApi = catchAsync(async (req, res) => {
     try {
         const { user } = req;
