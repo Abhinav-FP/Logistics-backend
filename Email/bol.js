@@ -1,7 +1,7 @@
 module.exports = ({shipments}) => {
 	// console.log("shipments",shipments);
   return `
-     <!DOCTYPE html>
+         <!DOCTYPE html>
   <html>
 <head>
 	<title>BOL</title>
@@ -258,14 +258,15 @@ module.exports = ({shipments}) => {
 					   	   	  	<td style="color: #1B1B1B;font-weight: bold;text-transform: uppercase;font-size: 14px;padding: 7px 10px 5px 10px; ">  </td> 
 					   	   	  </tr>
 					   	   	  <tr>
-					   	   	  	<td style="color: #1B1B1B;font-weight: bold; font-size: 20px;padding: 5px 10px 7px 0px;text-align: right; ">Total Carrier Pay : ${shipments?.cost || ""} </td> 
+					   	   	  	<td style="color: #1B1B1B;font-weight: bold; font-size: 20px;padding: 5px 10px 7px 0px;text-align: right; ">Total Carrier Pay : $${shipments?.cost || ""} </td> 
 					   	   	  </tr>
 					   	   </tbody>
 					   	</table>
 					   </td>			
 					</tr>
 					<tr>
-					   <td valign="bottom" width="50%" colspan="2" style="padding: 10px;color: #1B1B1B;font-weight: bold; font-size: 14px; text-align: right; ">GET PAID IN 2 DAYS! CALL 1-866-321-PLUS (7587) TO LEARN HOW! 
+					   <td valign="bottom" width="50%" colspan="2" style="padding: 10px;color: #1B1B1B;font-weight: bold; font-size: 14px; text-align: right; ">
+					       <!--GET PAID IN 2 DAYS! CALL 1-866-321-PLUS (7587) TO LEARN HOW! -->
 
 					   </td>	 		
 					</tr>
@@ -281,20 +282,26 @@ module.exports = ({shipments}) => {
 					   <td valign="top" width="60%" >
 					   	   <table cellspacing="0" cellpadding="0" style="width: 100%;" >
 					   	   	  <tr>
-					   	   	  	<td width="50%" style="color: #1B1B1B;;font-size: 14px;padding: 7px 10px 5px 0;">Logistic Management agent</td>
-					   	   	  	<td width="50%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">lrgr-taq</td>
+					   	   	  	<td width="50%" style="color: #1B1B1B;;font-size: 14px;padding: 7px 10px 5px 0;">Logistic Management agent:</td>
+					   	   	  	<td width="50%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${shipments?.broker_id?.name || ""}</td>
 					   	   	  </tr>
 					   	   	  <tr>
-					   	   	  	<td style="color: #1B1B1B;;font-size: 14px;padding: 5px 10px 7px 0;">agent contact :</td>
-					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">john </td>
+					   	   	  	<td style="color: #1B1B1B;;font-size: 14px;padding: 5px 10px 7px 0;">Agent Contact:</td>
+					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">${shipments?.broker_id?.contact || ""} </td>
 					   	   	  </tr>
 					   	   	   <tr>
-					   	   	  	<td style="color: #1B1B1B;;font-size: 14px;padding: 5px 10px 7px 0;">agent Phone :</td>
-					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">(210) 468-7791 </td>
+					   	   	  	<td style="color: #1B1B1B;;font-size: 14px;padding: 5px 10px 7px 0;">Agent Email:</td>
+					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">${shipments?.broker_id?.email || ""}</td>
 					   	   	  </tr>
 					   	   	  <tr>
-					   	   	  	<td style="color: #1B1B1B;;font-size: 14px;padding: 5px 10px 7px 0;">signature:</td>
-					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">.................</td>
+					   	   	  	<td style="color: #1B1B1B;;font-size: 14px;padding: 5px 10px 7px 0;">Driver Signature:</td>
+					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">
+					   	   	  	    <img 
+										src={shipments?.driver_sign || ""} 
+										width="100px" 
+										height="50px" 
+									/>
+					   	   	  	</td>
 					   	   	  </tr>
 					   	   </table>
 					   </td>	
@@ -302,18 +309,22 @@ module.exports = ({shipments}) => {
 					   	   <table cellspacing="0" cellpadding="0" style="width: 100%;" >
 					   	   	  <tr>
 					   	   	  	<td width="50%"  style="color: #1B1B1B;;font-size: 14px;padding: 7px 10px 5px 10px; ">carrier :</td>
-					   	   	  	<td width="60%"  style="color: #1B1B1B;font-size: 14px;padding: 10px 0 5px 10px;">smartway transport</td>
+					   	   	  	<td width="60%"  style="color: #1B1B1B;font-size: 14px;padding: 10px 0 5px 10px;">${shipments?.carrier_id?.name || ""}</td>
 					   	   	  </tr>
 					   	   	  <tr>
 					   	   	  	<td colspan="2" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0 7px 10px; ">
 					   	   	  		<table cellspacing="0" cellpadding="0" style="width: 100%;border: 1px solid #a5a5a5;" >
 							   	   	  <tr>
-							   	   	  	<td width="45%" style="color: #1B1B1B;;font-size: 14px;padding: 7px 10px 5px 10px;">carrier :</td>
-							   	   	  	<td width="65%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;"></td>
+							   	   	  	<td width="45%" style="color: #1B1B1B;;font-size: 14px;padding: 7px 10px 5px 10px;">Customer:</td>
+							   	   	  	<td width="65%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">${shipments?.customer_id?.name || ""}</td>
 							   	   	  </tr>
 							   	   	  <tr>
 							   	   	  	<td width="45%" style="color: #1B1B1B;;font-size: 14px;padding: 7px 10px 5px 10px;">signature :</td>
-							   	   	  	<td width="65%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">..............</td>
+							   	   	  	<td width="65%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">
+										<img src={shipments?.customer_sign || ""}
+					   	   	  	    width="100px" 
+                                    height="50px" 
+					   	   	  	    /></td>
 							   	   	  </tr>
 							   	   </table>
 					   	   	  		
@@ -329,27 +340,27 @@ module.exports = ({shipments}) => {
 			<td style="padding: 10px 20px 10px;">
 				<table cellspacing="0" cellpadding="0" style="width: 100%; ">
 					<tr>
-						<td width="33.33%">
+						<td width="45%">
 							<table cellspacing="0" cellpadding="0" style="width: 100%; ">
 								<tr>
-									<td width="35%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">Confirm date :</td>
-									<td width="65%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">2/9/2019</td> 
+									<td width="30%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">Shipping date: ${shipments?.shippingDate || ""}</td>
+									<!--<td width="70%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">${shipments?.shippingDate || ""}</td> -->
 								</tr>
 							</table>
 						</td>
-						<td width="33.33%">
-							<table cellspacing="0" cellpadding="0" style="width: 100%; ">
-								<tr>
-									<td width="35%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">Confirm date :</td>
-									<td width="65%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">2/9/2019</td> 
-								</tr>
-							</table>
+						<td width="10%">
+							<!--<table cellspacing="0" cellpadding="0" style="width: 100%; ">-->
+							<!--	<tr>-->
+							<!--		<td width="35%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">Confirm date :</td>-->
+							<!--		<td width="65%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">2/9/2019</td> -->
+							<!--	</tr>-->
+							<!--</table>-->
 						</td>
-						<td width="33.33%">
+						<td width="45%">
 							<table cellspacing="0" cellpadding="0" style="width: 100%; ">
 								<tr>
-									<td width="30%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">Carrier fax :</td>
-									<td width="70%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">0</td> 
+									<td width="80%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">Expected Deliver: ${shipments?.deliveryDateExpect || ""}</td>
+									<!--<td width="20%" style="color: #1B1B1B;;font-size: 14px;padding: 5px 0;">${shipments?.deliveryDateExpect || ""}</td>-->
 								</tr>
 							</table>
 						</td>
