@@ -126,6 +126,13 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
             { path: "driver_id", select: "name email" },
             { path: "carrier_id", select: "name email" }
         ]);
+        const shipmentdelivered = await shipment.find({ driver_id: req.user.id , status :"delivered" }).populate([
+            { path: "broker_id", select: "name email" },
+            { path: "shipper_id", select: "name email" },
+            { path: "customer_id", select: "name email" },
+            { path: "driver_id", select: "name email" },
+            { path: "carrier_id", select: "name email" }
+        ]);
         const directionGet = await directionModel.findOne({
             Shipment_id: shipments._id,
         });
@@ -133,7 +140,7 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
             return ApperrorResponses(res, "Shipment not found", 404);
         }
         successResponse(res, "Shipment fetched successfully", 200, {
-            directionGet, shipments
+            directionGet, shipments ,shipmentdelivered
         });
     } catch (error) {
         return ApperrorResponses(res, error.message || "Internal Server Error", 500);
