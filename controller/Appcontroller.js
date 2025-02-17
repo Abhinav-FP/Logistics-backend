@@ -3,13 +3,15 @@ const shipment = require("../model/shipment");
 const User = require("../model/user");
 const catchAsync = require("../utils/catchAsync");
 const jwt = require("jsonwebtoken");
-const { ApperrorResponses, successResponse, validationErrorResponse } = require("../utils/ErrorHandling");
+const { ApperrorResponses, successResponse, validationErrorResponse, errorResponse } = require("../utils/ErrorHandling");
 const Otp = require("../Email/Otp");
 const nodemailer = require('nodemailer');
 const NotificationModel = require("../model/Notification");
 const directionModel = require("../model/direction");
 const axios = require('axios');
 const { uploadFile } = require("../utils/S3");
+const mongoose = require("mongoose");
+
 
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
@@ -141,40 +143,40 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
 
 exports.getShipmentDetilas = catchAsync(async (req, res) => {
     try {
-      const { id } = req.params;
-  
-      let shipments = await shipment.find({_id: id}).populate([
-        { path: "broker_id", select: "name email contact" },
-        { path: "shipper_id", select: "name email contact" },
-        { path: "customer_id", select: "name email contact" },
-        { path: "driver_id", select: "name email contact" },
-        { path: "carrier_id", select: "name email contact" }
-      ]).sort({ created_at: -1 });
-  
-      if (!shipments || shipments.length === 0) {
-        return errorResponse(res, "No data found", 404);
-      }
-  
-      // Convert to an array of plain objects
-      shipments = shipments.map((shipment) => shipment.toObject());
-  
-      // Fetch driver data for each shipment that has a driver_id
-      await Promise.all(
-        shipments.map(async (shipment) => {
-          if (shipment.driver_id) {
-            const driverData = await Driver.findOne({ driver_id_ref: shipment.driver_id._id });
-            if (driverData) {
-              shipment.driver_id = { ...shipment.driver_id, ...driverData.toObject() };
-            }
-          }
-        })
-      );
-  
-      return successResponse(res, "Shipments fetched successfully", 200, shipments);
+        const { id } = req.params;
+
+        let shipments = await shipment.find({ _id: id }).populate([
+            { path: "broker_id", select: "name email contact" },
+            { path: "shipper_id", select: "name email contact" },
+            { path: "customer_id", select: "name email contact" },
+            { path: "driver_id", select: "name email contact" },
+            { path: "carrier_id", select: "name email contact" }
+        ]).sort({ created_at: -1 });
+
+        if (!shipments || shipments.length === 0) {
+            return errorResponse(res, "No data found", 404);
+        }
+
+        // Convert to an array of plain objects
+        shipments = shipments.map((shipment) => shipment.toObject());
+
+        // Fetch driver data for each shipment that has a driver_id
+        await Promise.all(
+            shipments.map(async (shipment) => {
+                if (shipment.driver_id) {
+                    const driverData = await Driver.findOne({ driver_id_ref: shipment.driver_id._id });
+                    if (driverData) {
+                        shipment.driver_id = { ...shipment.driver_id, ...driverData.toObject() };
+                    }
+                }
+            })
+        );
+
+        return successResponse(res, "Shipments fetched successfully", 200, shipments);
     } catch (error) {
-      return errorResponse(res, error.message || "Internal Server Error", 500);
+        return errorResponse(res, error.message || "Internal Server Error", 500);
     }
-  });
+});
 
 exports.forgotlinkrecord = catchAsync(async (req, res) => {
     try {
@@ -547,5 +549,73 @@ exports.updateDirections = catchAsync(async (req, res) => {
             success: false,
             message: error.message,
         });
+    }
+});
+
+
+exports.DashboardDriverApi = catchAsync(async (req, res) => {
+    try {
+        const { user } = req;
+        const shipperId = new mongoose.Types.ObjectId(user.id);
+        let filter = {};
+        if (user?.role === "driver") {
+            filter = { driver_id: shipperId };
+        }
+        let statusData = {
+            delivered: 0,
+            pending: 0,
+            transit: 0
+        };
+        let [statusCounts, Shipment, ShipmentData] = await Promise.all([
+            shipment.aggregate([
+                { $match: filter },
+                { $group: { _id: "$status", count: { $sum: 1 } } },
+            ]),
+            shipment.countDocuments(filter),
+            shipment
+                .find(filter)
+                .populate([
+                    { path: "broker_id", select: "name email" },
+                    { path: "shipper_id", select: "name email" },
+                    { path: "customer_id", select: "name email" },
+                    { path: "driver_id", select: "name email" },
+                    { path: "carrier_id", select: "name email" },
+                ])
+                .sort({ created_at: -1 })
+                .limit(4),
+        ]);
+
+        statusCounts.forEach(({ _id, count }) => {
+            if (statusData.hasOwnProperty(_id)) {
+                statusData[_id] = count;
+            }
+        });
+        if (ShipmentData && ShipmentData.length !== 0) {
+            ShipmentData = ShipmentData.map((shipment) => shipment.toObject());
+            await Promise.all(
+                ShipmentData.map(async (shipment) => {
+                    if (shipment.driver_id) {
+                        const driverData = await Driver.findOne({
+                            driver_id_ref: shipment.driver_id._id,
+                        });
+                        if (driverData) {
+                            shipment.driver_id = {
+                                ...shipment.driver_id,
+                                ...driverData.toObject(),
+                            };
+                        }
+                    }
+                })
+            );
+        }
+
+        res.json({
+            status: true,
+            message: "Dashboard fetched successfully",
+            data: { Shipment, statusData, ShipmentData },
+        });
+    } catch (error) {
+        console.error("Error occurred:", error);
+        errorResponse(res, error.message || "Failed to fetch profile", 500);
     }
 });

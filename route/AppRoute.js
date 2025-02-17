@@ -18,5 +18,6 @@ router.post("/read-notification", verifyToken, Appcontroller.MarkNotificationAsR
 router.post("/update_direction", Appcontroller.updateDirections);
 router.get("/shipment_update/:id", Appcontroller.updateShipmentData);
 router.post("/shipment_sign/:id", upload.single('file'), Appcontroller.updateShipmentSign);
+router.get("/dashboard", verifyToken, Appcontroller.DashboardDriverApi);
 
 module.exports = router;
