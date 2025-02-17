@@ -117,8 +117,7 @@ exports.GetDrivers = catchAsync(async (req, res) => {
 
 exports.ShipmentGet = catchAsync(async (req, res) => {
     try {
-        const { driver_id } = req.params;
-        const shipments = await shipment.find({ driver_id: driver_id }).populate([
+        const shipments = await shipment.find({ driver_id: req.user.id }).populate([
             { path: "broker_id", select: "name email" },
             { path: "shipper_id", select: "name email" },
             { path: "customer_id", select: "name email" },
@@ -138,6 +137,44 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
         return ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 })
+
+
+exports.getShipmentDetilas = catchAsync(async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      let shipments = await shipment.find({_id: id}).populate([
+        { path: "broker_id", select: "name email contact" },
+        { path: "shipper_id", select: "name email contact" },
+        { path: "customer_id", select: "name email contact" },
+        { path: "driver_id", select: "name email contact" },
+        { path: "carrier_id", select: "name email contact" }
+      ]).sort({ created_at: -1 });
+  
+      if (!shipments || shipments.length === 0) {
+        return errorResponse(res, "No data found", 404);
+      }
+  
+      // Convert to an array of plain objects
+      shipments = shipments.map((shipment) => shipment.toObject());
+  
+      // Fetch driver data for each shipment that has a driver_id
+      await Promise.all(
+        shipments.map(async (shipment) => {
+          if (shipment.driver_id) {
+            const driverData = await Driver.findOne({ driver_id_ref: shipment.driver_id._id });
+            if (driverData) {
+              shipment.driver_id = { ...shipment.driver_id, ...driverData.toObject() };
+            }
+          }
+        })
+      );
+  
+      return successResponse(res, "Shipments fetched successfully", 200, shipments);
+    } catch (error) {
+      return errorResponse(res, error.message || "Internal Server Error", 500);
+    }
+  });
 
 exports.forgotlinkrecord = catchAsync(async (req, res) => {
     try {
