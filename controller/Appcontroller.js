@@ -119,7 +119,7 @@ exports.GetDrivers = catchAsync(async (req, res) => {
 
 exports.ShipmentGet = catchAsync(async (req, res) => {
     try {
-        const shipments = await shipment.find({ driver_id: req.user.id  }).populate([
+        const shipments = await shipment.find({ driver_id: req.user.id, status: { $ne: "delivered" }}).populate([
             { path: "broker_id", select: "name email" },
             { path: "shipper_id", select: "name email" },
             { path: "customer_id", select: "name email" },
@@ -395,6 +395,28 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
     }
 });
 
+exports.DriverReached = catchAsync(async (req, res) => {
+    try {
+        const Id = req.params.id;
+        const updatedShipment = await shipment.findByIdAndUpdate(
+            { _id: Id },
+            { driver_location:"completed"},
+              {
+                new: true,
+                runValidators: true,
+              }
+            );
+
+        if (!updatedShipment) {
+            return ApperrorResponses(res, "Shipment not found", 404, false);
+        }
+
+        return successResponse(res, "Shipment updated successfully", 200, updatedShipment);
+    } catch (error) {
+        return ApperrorResponses(res, error.message || "Internal Server Error", 500);
+    }
+});
+
 exports.updateShipmentSign = catchAsync(async (req, res) => {
     try {
         const type = req?.body?.signType
@@ -417,14 +439,14 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         if (fieldToUpdate === "customer_sign") {
             updatedShipment = await shipment.findOneAndUpdate(
                 { _id: Id },
-                { [fieldToUpdate]: fileUrl, status: "delivered" },
+                { [fieldToUpdate]: fileUrl, status: "delivered"},
                 { new: true, runValidators: true }
             );
         }
         else {
             updatedShipment = await shipment.findOneAndUpdate(
                 { _id: Id },
-                { [fieldToUpdate]: fileUrl },
+                { [fieldToUpdate]: fileUrl, driver_location:"running" },
                 { new: true, runValidators: true }
             );
         }
