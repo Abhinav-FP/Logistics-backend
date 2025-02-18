@@ -421,7 +421,6 @@ exports.getShipmentofCustomer = catchAsync(async (req, res) => {
 });
 
 exports.getBOL = catchAsync(async (req, res) => {
-  console.log(req.param.id);
   try {
     let shipments = await Shipment.findById({_id : req?.params?.id}).populate([
       { path: "broker_id", select: "-password" },
