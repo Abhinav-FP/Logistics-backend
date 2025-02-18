@@ -17,4 +17,7 @@ router.get("/get-shipment-customer/:status?", verifyToken, checkPermission('view
 // router.get("/get-bol",verifyToken, checkPermission('view-shipment'), getBOL);
 router.get("/get-bol/:id", getBOL);
 
+router.get("/bols/:id", getBOL);
+
+
 module.exports = router;
