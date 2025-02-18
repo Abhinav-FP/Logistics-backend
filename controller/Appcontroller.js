@@ -119,7 +119,7 @@ exports.GetDrivers = catchAsync(async (req, res) => {
 
 exports.ShipmentGet = catchAsync(async (req, res) => {
     try {
-        const shipments = await shipment.find({ driver_id: req.user.id   }).populate([
+        const shipments = await shipment.find({ driver_id: req.user.id  }).populate([
             { path: "broker_id", select: "name email" },
             { path: "shipper_id", select: "name email" },
             { path: "customer_id", select: "name email" },
@@ -151,7 +151,6 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
 exports.getShipmentDetilas = catchAsync(async (req, res) => {
     try {
         const { id } = req.params;
-
         let shipments = await shipment.find({ _id: id }).populate([
             { path: "broker_id", select: "name email contact" },
             { path: "shipper_id", select: "name email contact" },
@@ -448,7 +447,7 @@ exports.updateDirections = catchAsync(async (req, res) => {
         const shipments = await shipment.findOneAndUpdate(
             { _id: Shipment_id },
             {
-                CurrentLocation: CurrentLocation
+                CurrentLocation: CurrentLocation,
             },
             {
                 new: true,
