@@ -102,7 +102,7 @@ const shipmentSchema = new mongoose.Schema({
   },
   driver_location :{
     type: String,
-    default: null,
+    default: "transit",
   },
   review: {
     type: String,
