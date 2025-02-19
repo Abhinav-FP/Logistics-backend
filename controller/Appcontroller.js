@@ -462,38 +462,42 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
 });
 
 exports.updateDirections = catchAsync(async (req, res) => {
-    let { Shipment_id, CurrentLocation } = req.body;
+    let { Shipment_id, lat, long } = req.body;
+    console.log("req.body", req.body);
+
     try {
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
-        const shipments = await shipment.findOneAndUpdate(
-            { _id: Shipment_id },
-            {
-                CurrentLocation: CurrentLocation,
-            },
-            {
-                new: true,
-                runValidators: true
-            }
-        );
-
-        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(CurrentLocation)}&key=${apiKey}`;
+        // Reverse Geocode to get Address from Lat/Long
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${apiKey}`;
         const geocodeResponse = await axios.get(geocodeUrl);
+
         if (geocodeResponse.data.status !== 'OK') {
             return res.status(400).json({
                 success: false,
-                message: "Failed to convert address to coordinates",
+                message: "Failed to convert coordinates to address",
             });
         }
 
-        const locationData = geocodeResponse.data.results[0].geometry.location;
-        CurrentLocation = {
-            location: geocodeResponse.data.results[0].formatted_address,
-            lat: locationData.lat,
-            lng: locationData.lng,
+        // Extract formatted address from Geocode API
+        const formattedAddress = geocodeResponse.data.results[0].formatted_address;
+        console.log("formattedAddress", formattedAddress);
+        const CurrentLocation = {
+            location: formattedAddress,
+            lat,
+            lng: long
         };
 
-        // Find shipment document
+
+        // Update shipment record with current location
+        const shipments = await shipment.findOneAndUpdate(
+            { _id: Shipment_id },
+            { current_location :formattedAddress },
+            { new: true, runValidators: true }
+        );
+console.log("shipments" ,shipments);
+
+        // Find shipment document in directionModel
         const doc = await directionModel.findOne({ Shipment_id });
         if (!doc) {
             return res.status(404).json({
@@ -504,11 +508,10 @@ exports.updateDirections = catchAsync(async (req, res) => {
 
         const { StartLocation, EndLocation } = doc;
 
-        // Construct Directions API URLs
-        const startToCurrentUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${StartLocation.lat},${StartLocation.lng}&destination=${CurrentLocation.lat},${CurrentLocation.lng}&key=${apiKey}`;
-        const currentToEndUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${CurrentLocation.lat},${CurrentLocation.lng}&destination=${EndLocation.lat},${EndLocation.lng}&key=${apiKey}`;
+        // Get Directions from Start to Current and Current to End
+        const startToCurrentUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${StartLocation.lat},${StartLocation.lng}&destination=${lat},${long}&key=${apiKey}`;
+        const currentToEndUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${lat},${long}&destination=${EndLocation.lat},${EndLocation.lng}&key=${apiKey}`;
 
-        // Fetch directions data from Google Maps API
         const [startToCurrentResponse, currentToEndResponse] = await Promise.all([
             axios.get(startToCurrentUrl),
             axios.get(currentToEndUrl),
@@ -530,7 +533,7 @@ exports.updateDirections = catchAsync(async (req, res) => {
                 CurrentToEndPolyline: currentToEndResponse.data.routes[0].overview_polyline.points,
             };
 
-            // Update shipment document
+            // Update shipment with new directions
             const updatedDoc = await directionModel.findOneAndUpdate(
                 { Shipment_id },
                 {
@@ -560,20 +563,20 @@ exports.updateDirections = catchAsync(async (req, res) => {
                 { new: true }
             );
 
-            res.json({
+            return res.json({
                 success: true,
                 message: "Directions updated successfully",
                 data: updatedDoc,
             });
         } else {
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: 'Failed to fetch directions from Google Maps API',
             });
         }
     } catch (error) {
         console.error("Error updating directions:", error.message);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error.message,
         });
