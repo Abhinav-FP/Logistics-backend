@@ -294,10 +294,11 @@ exports.NotificationDriverGet = catchAsync(async (req, res) => {
             .populate("ShipmentId")
             .populate("receiverDriverId.Receiver", "-password");
         const notificationCount = notification.length;
-        // data: notification,
+       
         res.json({
             status: true,
             count: notificationCount,
+            data: notification,
             message: 'Notifications fetched successfully',
         });
     } catch (error) {
@@ -312,14 +313,12 @@ exports.NotificationDriverGet = catchAsync(async (req, res) => {
 exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     const UserId = req.user.id;
     const { shipmentId } = req.body;
-
     if (!UserId || !shipmentId) {
         return res.status(400).json({
             status: false,
             message: 'UserId and ShipmentId are required',
         });
     }
-
     try {
         const notification = await NotificationModel.findOne({ ShipmentId: shipmentId });
 
