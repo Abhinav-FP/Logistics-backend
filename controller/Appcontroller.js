@@ -118,14 +118,14 @@ exports.GetDrivers = catchAsync(async (req, res) => {
 
 exports.ShipmentGet = catchAsync(async (req, res) => {
     try {
-        const shipments = await shipment.find({ driver_id: req.user.id, status: { $ne: "delivered" } }).populate([
+        const shipments = await shipment.find({ driver_id: req.user.id, status: { $ne: "delivered" }, driver_location: { $ne: "reached" } }).populate([
             { path: "broker_id", select: "name email" },
             { path: "shipper_id", select: "name email" },
             { path: "customer_id", select: "name email" },
             { path: "driver_id", select: "name email" },
             { path: "carrier_id", select: "name email" }
         ]);
-        const shipmentdelivered = await shipment.find({ driver_id: req.user.id, status: "delivered" }).populate([
+        const shipmentdelivered = await shipment.find({ driver_id: req.user.id, status: "delivered", driver_location: "reached" }).populate([
             { path: "broker_id", select: "name email" },
             { path: "shipper_id", select: "name email" },
             { path: "customer_id", select: "name email" },
@@ -413,7 +413,6 @@ exports.DriverReached = catchAsync(async (req, res) => {
 exports.updateShipmentSign = catchAsync(async (req, res) => {
     try {
         const type = req?.body?.signType
-
         if (!req.file) {
             return ApperrorResponses(res, "No file uploaded", 400, false);
         }

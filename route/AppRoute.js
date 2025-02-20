@@ -23,5 +23,4 @@ router.post("/shipment_sign/:id", upload.single('file'), Appcontroller.updateShi
 router.get("/dashboard", verifyToken, Appcontroller.DashboardDriverApi);
 router.get("/bols/:id", getBOL);
 
-
 module.exports = router;
