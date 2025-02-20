@@ -311,6 +311,7 @@ exports.NotificationDriverGet = catchAsync(async (req, res) => {
 
 exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     const UserId = req.user.id;
+    console.log(UserId);
     const { shipmentId } = req.body;
     if (!UserId || !shipmentId) {
         return res.status(400).json({
@@ -398,7 +399,7 @@ exports.DriverReached = catchAsync(async (req, res) => {
         const Id = req.params.id;
         const updatedShipment = await shipment.findByIdAndUpdate(
             { _id: Id },
-            { driver_location: "completed" },
+            { driver_location: "Reached" },
             {
                 new: true,
                 runValidators: true,
