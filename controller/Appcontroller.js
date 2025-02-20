@@ -311,7 +311,6 @@ exports.NotificationDriverGet = catchAsync(async (req, res) => {
 
 exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     const UserId = req.user.id;
-    console.log(UserId);
     const { shipmentId } = req.body;
     if (!UserId || !shipmentId) {
         return res.status(400).json({
@@ -423,17 +422,13 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         if (!req.file) {
             return ApperrorResponses(res, "No file uploaded", 400, false);
         }
-
         const Id = req.params.id;
         const result = await uploadFile(req, res); // Upload file to S3
         const fileUrl = result?.fileUrl;
-
         if (!fileUrl) {
             return ApperrorResponses(res, "File upload failed", 500, false);
         }
-
         const fieldToUpdate = type === 'customer' ? 'customer_sign' : 'driver_sign';
-
         let updatedShipment;
         if (fieldToUpdate === "customer_sign") {
             updatedShipment = await shipment.findOneAndUpdate(
@@ -462,40 +457,30 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
 
 exports.updateDirections = catchAsync(async (req, res) => {
     let { Shipment_id, lat, long } = req.body;
-    console.log("req.body", req.body);
-
     try {
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-
         // Reverse Geocode to get Address from Lat/Long
         const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${apiKey}`;
         const geocodeResponse = await axios.get(geocodeUrl);
-
         if (geocodeResponse.data.status !== 'OK') {
             return res.status(400).json({
                 success: false,
                 message: "Failed to convert coordinates to address",
             });
         }
-
         // Extract formatted address from Geocode API
         const formattedAddress = geocodeResponse.data.results[0].formatted_address;
-        console.log("formattedAddress", formattedAddress);
         const CurrentLocation = {
             location: formattedAddress,
             lat,
             lng: long
         };
-
-
         // Update shipment record with current location
         const shipments = await shipment.findOneAndUpdate(
             { _id: Shipment_id },
             { current_location: formattedAddress },
             { new: true, runValidators: true }
         );
-        console.log("shipments", shipments);
-
         // Find shipment document in directionModel
         const doc = await directionModel.findOne({ Shipment_id });
         if (!doc) {
@@ -504,9 +489,7 @@ exports.updateDirections = catchAsync(async (req, res) => {
                 message: "Shipment not found",
             });
         }
-
         const { StartLocation, EndLocation } = doc;
-
         // Get Directions from Start to Current and Current to End
         const startToCurrentUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${StartLocation.lat},${StartLocation.lng}&destination=${lat},${long}&key=${apiKey}`;
         const currentToEndUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${lat},${long}&destination=${EndLocation.lat},${EndLocation.lng}&key=${apiKey}`;
