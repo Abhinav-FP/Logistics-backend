@@ -196,13 +196,10 @@ exports.DashboardAdminApi = catchAsync(async (req, res) => {
         const Users = await User.aggregate([
             { $group: { _id: "$role", count: { $sum: 1 } } },
         ]);
-
         const Shipment = await shipment.countDocuments();
-
         const statusCounts = await shipment.aggregate([
             { $group: { _id: "$status", count: { $sum: 1 } } },
         ]);
-
         let ShipmentData = await shipment
             .find()
             .populate([

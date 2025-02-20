@@ -12,7 +12,6 @@ const axios = require('axios');
 const { uploadFile } = require("../utils/S3");
 const mongoose = require("mongoose");
 
-
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
 }
@@ -146,7 +145,6 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
         return ApperrorResponses(res, error.message || "Internal Server Error", 500);
     }
 })
-
 
 exports.getShipmentDetilas = catchAsync(async (req, res) => {
     try {
@@ -320,16 +318,13 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     }
     try {
         const notification = await NotificationModel.findOne({ ShipmentId: shipmentId });
-
         if (!notification) {
             return res.status(404).json({
                 status: false,
                 message: 'Notification not found',
             });
         }
-
         let updated = false;
-
         notification.receiverDriverId.forEach(receiver => {
             if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
                 receiver.IsRead = true;
