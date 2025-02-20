@@ -84,7 +84,7 @@ exports.createShipment = catchAsync(async (req, res) => {
         false
       );
     }
-  
+
 
     const shipmentData = {};
     const schemaFields = Object.keys(Shipment.schema.paths);
@@ -121,7 +121,7 @@ exports.createShipment = catchAsync(async (req, res) => {
       body: {
         pickup_location: shipment.pickup_location,
         drop_location: shipment.drop_location,
-        current_location:shipment.pickup_location,
+        current_location: shipment.pickup_location,
         Shipment_id: shipment._id,
       },
     });
@@ -274,7 +274,7 @@ exports.getShipment = catchAsync(async (req, res) => {
 
 exports.getShipmentofShipper = catchAsync(async (req, res) => {
   try {
-    const {status} = req.params;
+    const { status } = req.params;
     let query = { shipper_id: req.user.id };
     if (status !== undefined && status !== "") {
       query.status = status;
@@ -311,8 +311,8 @@ exports.getShipmentofShipper = catchAsync(async (req, res) => {
 
 exports.getShipmentofBroker = catchAsync(async (req, res) => {
   try {
-    const {status} = req.params;
-    let query = {broker_id: req.user.id };
+    const { status } = req.params;
+    let query = { broker_id: req.user.id };
     if (status !== undefined && status !== "") {
       query.status = status;
     }
@@ -348,7 +348,7 @@ exports.getShipmentofBroker = catchAsync(async (req, res) => {
 
 exports.getShipmentofCarrier = catchAsync(async (req, res) => {
   try {
-    const {status} = req.params;
+    const { status } = req.params;
     let query = { carrier_id: req.user.id };
     if (status !== undefined && status !== "") {
       query.status = status;
@@ -385,7 +385,7 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
 
 exports.getShipmentofCustomer = catchAsync(async (req, res) => {
   try {
-    const {status} = req.params;
+    const { status } = req.params;
     let query = { customer_id: req.user.id };
     if (status !== undefined && status !== "") {
       query.status = status;
@@ -422,7 +422,7 @@ exports.getShipmentofCustomer = catchAsync(async (req, res) => {
 
 exports.getBOL = catchAsync(async (req, res) => {
   try {
-    let shipments = await Shipment.findById({_id : req?.params?.id}).populate([
+    let shipments = await Shipment.findById({ _id: req?.params?.id }).populate([
       { path: "broker_id", select: "-password" },
       { path: "shipper_id", select: "-password" },
       { path: "customer_id", select: "-password" },
@@ -438,19 +438,19 @@ exports.getBOL = catchAsync(async (req, res) => {
     shipments = shipments.toObject();
 
     // Fetch driver data for each shipment that has a driver_id
-        if (shipments.driver_id) {
-          const driverData = await Driver.findOne({ driver_id_ref: shipments.driver_id._id });
-          if (driverData) {
-            shipments.driver_id = { ...shipments.driver_id, ...driverData.toObject() };
-          }
-        }
+    if (shipments.driver_id) {
+      const driverData = await Driver.findOne({ driver_id_ref: shipments.driver_id._id });
+      if (driverData) {
+        shipments.driver_id = { ...shipments.driver_id, ...driverData.toObject() };
+      }
+    }
     // return res.json({
     //   status:true,
     //   message:"Data retrieved sucessfully",
     //   data:shipments
     // })
 
-    const BOLHTML = BOL({shipments});
+    const BOLHTML = BOL({ shipments });
 
     const options1 = {
       width: "800px",

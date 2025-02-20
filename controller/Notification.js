@@ -30,7 +30,6 @@ exports.createNotification = catchAsync(async (req, res) => {
         console.error(error);
     }
 });
-
 exports.updateNotification = catchAsync(async (req, res) => {
     try {
         const { senderId, receiverCarrierId, ShipmentId, receiverDriverId } =
