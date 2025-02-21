@@ -427,7 +427,7 @@ exports.updateShipmentSign = catchAsync(async (req, res) => {
         if (fieldToUpdate === "customer_sign") {
             updatedShipment = await shipment.findOneAndUpdate(
                 { _id: Id },
-                { [fieldToUpdate]: fileUrl, status: "delivered"  ,driver_location: "delivered"  },
+                { [fieldToUpdate]: fileUrl, status: "delivered", driver_location: "delivered" },
                 { new: true, runValidators: true }
             );
         }
