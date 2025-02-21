@@ -215,7 +215,6 @@ exports.updateShipmentData = catchAsync(async (req, res) => {
   }
 });
 
-
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
     const notificationdata = await notification.findOneAndDelete({ ShipmentId: req.params.id });
