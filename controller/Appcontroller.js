@@ -125,7 +125,7 @@ exports.ShipmentGet = catchAsync(async (req, res) => {
             { path: "driver_id", select: "name email" },
             { path: "carrier_id", select: "name email" }
         ]);
-        const shipmentdelivered = await shipment.find({ driver_id: req.user.id, status: "delivered", driver_location: "reached" }).populate([
+        const shipmentdelivered = await shipment.find({ driver_id: req.user.id, status: "delivered", driver_location: "delivered" }).populate([
             { path: "broker_id", select: "name email" },
             { path: "shipper_id", select: "name email" },
             { path: "customer_id", select: "name email" },
