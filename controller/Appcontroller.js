@@ -69,6 +69,7 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
         if (!req.user.id) {
             return ApperrorResponses(res, "No users found", 404);
         }
+        console.log("req.body",req.body)
         const { driver_name, mc_number, company_name } = req.body;
         const driverResult = await Driver.findOne({ driver_id_ref: req.user.id });
         if (!driverResult) {
