@@ -69,7 +69,6 @@ exports.UpdateDriver = catchAsync(async (req, res) => {
         if (!req.user.id) {
             return ApperrorResponses(res, "No users found", 404);
         }
-        console.log("req.body",req.body)
         const { driver_name, mc_number, company_name } = req.body;
         const driverResult = await Driver.findOne({ driver_id_ref: req.user.id });
         if (!driverResult) {
@@ -626,3 +625,31 @@ exports.DashboardDriverApi = catchAsync(async (req, res) => {
         errorResponse(res, error.message || "Failed to fetch profile", 500);
     }
 });
+
+
+
+// server {
+//     listen 80;
+//     server_name tracebill.com www.tracebill.com;
+
+//     location / {
+//         proxy_pass http://13.61.214.119:3000;
+//         proxy_set_header Host $host;
+//         proxy_set_header X-Real-IP $remote_addr;
+//         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+//         proxy_set_header X-Forwarded-Proto $scheme;
+//     }
+// }
+
+// server {
+//     listen 80;
+//     server_name api.tracebill.com;
+
+//     location / {
+//         proxy_pass http://13.61.214.119:5000;
+//         proxy_set_header Host $host;
+//         proxy_set_header X-Real-IP $remote_addr;
+//         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+//         proxy_set_header X-Forwarded-Proto $scheme;
+//     }
+// }

@@ -1,6 +1,7 @@
 module.exports = {
     apps: [
       {
+        watch: true,
         name: 'Logistics-backend',
         script: './App.js',
         cwd: '/home/ubuntu/Logistics-backend',
