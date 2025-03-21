@@ -2,9 +2,9 @@
 FROM ubuntu:24.04
 
 # Set environment variables
-ENV DB_URL = "mongodb+srv://amathur:Rwey691BQ0kFq3UL@logistics-db.qq6pf.mongodb.net/?retryWrites=true&w=majority&appName=Logistics-db"
-ENV REACT_APP_SERVER_DOMIN = 5000
-ENV JWT_SECRET_KEY =123456789
+ENV DB_URL="mongodb+srv://amathur:Rwey691BQ0kFq3UL@logistics-db.qq6pf.mongodb.net/?retryWrites=true&w=majority&appName=Logistics-db"
+ENV REACT_APP_SERVER_DOMIN=5000
+ENV JWT_SECRET_KEY=123456789
 
 # Install necessary dependencies and Node.js
 RUN apt-get update && \
