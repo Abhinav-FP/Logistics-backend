@@ -442,6 +442,7 @@ exports.getDriver = catchAsync(async (req, res) => {
       "driver_id_ref",
       "-password -__v -created_at -updated_at"
     );
+    console.log("drivers" ,drivers)
     if (!drivers) {
       return errorResponse(res, "No data found", 404);
     }

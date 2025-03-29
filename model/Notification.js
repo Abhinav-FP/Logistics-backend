@@ -14,7 +14,7 @@ const NotificationSchema = new mongoose.Schema({
     IsRead: {
       type: Boolean,
       default: false,
-    }
+    },
   }],
   receiverCustomerId: [{
     Receiver: {
@@ -24,7 +24,7 @@ const NotificationSchema = new mongoose.Schema({
     IsRead: {
       type: Boolean,
       default: false,
-    }
+    },
   }],
   receiverBrokerId: [{
     Receiver: {
@@ -34,7 +34,7 @@ const NotificationSchema = new mongoose.Schema({
     IsRead: {
       type: Boolean,
       default: false,
-    }
+    },
   }],
   receiverCarrierId: [{
     Receiver: {
@@ -44,7 +44,7 @@ const NotificationSchema = new mongoose.Schema({
     IsRead: {
       type: Boolean,
       default: false,
-    }
+    },
   }],
   receiverDriverId: [{
     Receiver: {
@@ -54,13 +54,14 @@ const NotificationSchema = new mongoose.Schema({
     IsRead: {
       type: Boolean,
       default: false,
-    }
+    },
   }],
   ShipmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Shipment",
     required: true,
   },
+  Text: String,
 }, { timestamps: true });
 
 const NotificationModel = mongoose.model("Notification", NotificationSchema);
