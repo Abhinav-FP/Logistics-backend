@@ -6,7 +6,7 @@ const { validationErrorResponse, errorResponse, successResponse, } = require("..
 const catchAsync = require("../utils/catchAsync");
 const notification = require("../model/Notification")
 const BOL = require("../Email/bol.js");
-const { createNotification, updateNotification, updateStatusNotification } = require('./Notification.js'); // Import the Notification function
+const { createNotification, updateNotification, updateStatusNotification, updateReviewNotification } = require('./Notification.js'); // Import the Notification function
 const { AddDirection } = require('./directionsController.js');
 const { uploadFile } = require('../utils/S3.js');
 // const puppeteer = require('puppeteer');
@@ -94,10 +94,7 @@ exports.createShipment = catchAsync(async (req, res) => {
         shipmentData[field] = req.body[field];
       }
     });
-
     shipmentData.shipper_id = shipper_id;
-
-    // Add fileUrl to uploadedBol if available
     let fileUrl;
     if (req.file) {
       const result = await uploadFile(req, res); // Upload file to S3
@@ -106,13 +103,12 @@ exports.createShipment = catchAsync(async (req, res) => {
     if (fileUrl) {
       shipmentData.uploadedBol = fileUrl;
     }
-
     const shipment = await Shipment.create(shipmentData);
     await createNotification({
       body: {
         senderId: shipper_id,
-        receiverBrokerId: [req.body.broker_id].map(id => ({ Receiver: id })),
-        receiverCustomerId: [req.body.customer_id].map(id => ({ Receiver: id })),
+        receiverBrokerId: [shipment.broker_id].map(id => ({ Receiver: id })),
+        receiverCustomerId: [shipment.customer_id].map(id => ({ Receiver: id })),
         ShipmentId: shipment._id,
       },
     });
@@ -125,7 +121,6 @@ exports.createShipment = catchAsync(async (req, res) => {
         Shipment_id: shipment._id,
       },
     });
-
     return successResponse(
       res,
       "Shipment created successfully",
@@ -154,24 +149,57 @@ exports.updateShipment = catchAsync(async (req, res) => {
     if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
-    await updateStatusNotification({
-      body: {
-        senderId: shipment.shipper_id,
-        receiverBrokerId: updateData.broker_id,
-        receiverCustomerId: updateData.customer_id,
-        ShipmentId: shipment._id,
-        status: false,
-      },
-    })
+    console.log("shipment" ,shipment)
+if(updateData?.broker_id){
+  await updateStatusNotification({
+    body: {
+      senderId: shipment.shipper_id,
+      receiverBrokerId: updateData.broker_id,
+      receiverCustomerId: updateData.customer_id,
+      ShipmentId: shipment._id,
+      status: false,
+    },
+  })
+}
+   if(updateData.carrier_id){
     await updateNotification({
       body: {
         senderId: shipment.shipper_id,
         ShipmentId: shipment._id,
         receiverCarrierId: updateData.carrier_id,
         receiverDriverId: updateData.driver_id,
+        receiverBrokerId: shipment.broker_id,
+        receiverCustomerId: shipment.customer_id,
         ShipmentId: shipment._id,
       },
     });
+   }
+   if(updateData.driver_id){
+    await updateNotification({
+      body: {
+        senderId: shipment.shipper_id,
+        ShipmentId: shipment._id,
+        receiverCarrierId: updateData.carrier_id,
+        receiverDriverId: updateData.driver_id,
+        receiverBrokerId: shipment.broker_id,
+        receiverCustomerId: shipment.customer_id,
+        ShipmentId: shipment._id,
+      },
+    });
+   }
+   
+    if(updateData.review){
+      await updateReviewNotification({
+        body: {
+          senderId: shipment.shipper_id,
+          ShipmentId: shipment._id,
+          receiverCarrierId: shipment.carrier_id,
+          receiverBrokerId: shipment.broker_id,
+          receiverDriverId: shipment.driver_id,
+          receiverShipperId: shipment.shipper_id,
+        },
+      })
+    }
 
     if (updateData.carrier_id) {
       return successResponse(res, "Carrier Assigned successfully", 200, shipment);
