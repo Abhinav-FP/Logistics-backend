@@ -35,11 +35,9 @@ exports.createNotification = catchAsync(async (req, res) => {
 exports.updateNotification = catchAsync(async (req, res) => {
     try {
         const { receiverCarrierId, ShipmentId, receiverDriverId, receiverCustomerId, receiverBrokerId } = req.body;
-        console.log("req.body", req.body);
         const formatToArray = (value) => (value ? (Array.isArray(value) ? value : [{ Receiver: value }]) : []);
         const existingNotification = await NotificationModel.findOne({ ShipmentId });
         if (!existingNotification) {
-            console.log("No existing notification found, creating a new one.");
             return res.status(404).json({ message: "Notification not found" });
         }
         const newCarrierIds = formatToArray(receiverCarrierId);
@@ -68,7 +66,6 @@ exports.updateNotification = catchAsync(async (req, res) => {
         existingNotification.receiverBrokerId = addUniqueReceivers(existingNotification.receiverBrokerId, newBrokerIds);
 
         const updatedNotification = await existingNotification.save();
-        console.log("updatedNotification", updatedNotification);
 
     } catch (error) {
         console.error(error);
@@ -228,11 +225,9 @@ exports.updateStatusNotification = catchAsync(async (req, res) => {
 
 
 exports.updateReviewNotification = catchAsync(async (req, res) => {
-    console.log(" req.body", req.body)
     const { ShipmentId, receiverBrokerId, receiverDriverId, receiverCarrierId, receiverShipperId, receiverCustomerId } = req.body;
     try {
         const existingNotification = await NotificationModel.findOne({ ShipmentId: ShipmentId });
-        console.log(existingNotification)
         await NotificationModel.findOneAndUpdate(existingNotification._id, {
             $set: {
                 'receiverDriverId': [{ Receiver: receiverDriverId, IsRead: false, }],

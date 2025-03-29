@@ -12,7 +12,6 @@ const axios = require('axios');
 const { uploadFile } = require("../utils/S3");
 const mongoose = require("mongoose");
 
-
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
 }
