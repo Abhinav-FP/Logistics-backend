@@ -185,19 +185,22 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
       return errorResponse(res, "Invalid request: No valid update fields provided", 400, false);
     }
 
-    let updateData = {};
+    let updateData = {},text="";
 
     // Case 1: Both carrier_id and fileUrl are provided
     if (carrier_id && fileUrl) {
       updateData = { carrier_id, broker_dispatch_sheet: fileUrl };
+      text="Carrier and dispatch shhet assigned successfully";
     }
     // Case 2: Only fileUrl is provided
     else if (fileUrl) {
       updateData = { carrier_dispatch_sheet: fileUrl };
+      text="Dispatch sheet sent back to broker successfully";
     }
     // Case 3: Only broker_approve (boolean) is provided
     else if (broker_approve !== undefined) {
       updateData = { broker_approve };
+      text="Dispatch sheet approved successfully";
     }
 
     // Update the shipment with the appropriate data
@@ -210,7 +213,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
       return errorResponse(res, "Shipment not found", 404, false);
     }
 
-    return successResponse(res, "Shipment updated successfully", 200, shipment);
+    return successResponse(res, text, 200, shipment);
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
