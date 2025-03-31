@@ -8,51 +8,8 @@ const notification = require("../model/Notification")
 const BOL = require("../Email/bol.js");
 const { createNotification, updateNotification, updateStatusNotification, updateReviewNotification } = require('./Notification.js'); // Import the Notification function
 const { AddDirection } = require('./directionsController.js');
-const { uploadFile } = require('../utils/S3.js');
-// const puppeteer = require('puppeteer');
-// var Promise = require('bluebird');
-// const hb = require('handlebars');
+const { deleteFile } = require('../utils/S3.js');
 
-// // PDF Generator function, edit it carefully
-// async function generatePdf(file, options, callback) {
-//   // we are using headless mode
-//   let args = [
-//     '--no-sandbox',
-//     '--disable-setuid-sandbox',
-//   ];
-//   if(options.args) {
-//     args = options.args;
-//     delete options.args;
-//   }
-
-//   const browser = await puppeteer.launch({
-//     executablePath: '/usr/bin/google-chrome-stable', // Path to the installed Chromium
-//     args: ['--no-sandbox', '--disable-setuid-sandbox'], // Avoid sandboxing issues in Docker
-//   });
-//   const page = await browser.newPage();
-
-//   if(file.content) {
-//     console.log("Compiling the template with handlebars")
-//     // we have compile our code with handlebars
-//     const template = hb.compile(file.content, { strict: true });
-//     const result = template(file.content);
-//     const html = result;
-
-//     // We set the page content as the generated html by handlebars
-//     await page.setContent(html);
-//   } else {
-//     await page.goto(file.url, {
-//       waitUntil: 'networkidle0', // wait for page to load completely
-//     });
-//   }
-
-//   return Promise.props(page.pdf(options))
-//     .then(async function(data) {
-//        await browser.close();
-
-//        return Buffer.from(Object.values(data));
-//     }).asCallback(callback);
-// }
 exports.createShipment = catchAsync(async (req, res) => {
   try {
     const requiredFields = [
@@ -95,11 +52,8 @@ exports.createShipment = catchAsync(async (req, res) => {
       }
     });
     shipmentData.shipper_id = shipper_id;
-    let fileUrl;
-    if (req.file) {
-      const result = await uploadFile(req, res); // Upload file to S3
-      fileUrl = result?.fileUrl;
-    }
+    console.log("req.file", req.file);
+    const fileUrl = req?.file?.location || null;
     if (fileUrl) {
       shipmentData.uploadedBol = fileUrl;
     }
@@ -135,6 +89,9 @@ exports.createShipment = catchAsync(async (req, res) => {
 exports.updateShipment = catchAsync(async (req, res) => {
   try {
     const updateData = req.body;
+    console.log("req.file",req.file);
+    console.log("body",req?.body);
+    return successResponse(res, "Consoled successfully", 200);
     if (!updateData || Object.keys(updateData).length === 0) {
       return errorResponse(res, "No data provided to update", 400, false);
     }
@@ -218,28 +175,69 @@ exports.updateShipment = catchAsync(async (req, res) => {
   }
 });
 
-exports.updateShipmentData = catchAsync(async (req, res) => {
+exports.dispatchSheet = catchAsync(async (req, res) => {
   try {
-    const updateData = req.body;
-    if (!updateData || Object.keys(updateData).length === 0) {
-      return errorResponse(res, "No data provided to update", 400, false);
+    const { carrier_id, broker_approve } = req.body;
+    const fileUrl = req?.file?.location;
+
+    // If no valid data is provided, return an error
+    if (!carrier_id && !fileUrl && broker_approve === undefined) {
+      return errorResponse(res, "Invalid request: No valid update fields provided", 400, false);
     }
-    const shipment = await Shipment.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+
+    let updateData = {};
+
+    // Case 1: Both carrier_id and fileUrl are provided
+    if (carrier_id && fileUrl) {
+      updateData = { carrier_id, broker_dispatch_sheet: fileUrl };
+    }
+    // Case 2: Only fileUrl is provided
+    else if (fileUrl) {
+      updateData = { carrier_dispatch_sheet: fileUrl };
+    }
+    // Case 3: Only broker_approve (boolean) is provided
+    else if (broker_approve !== undefined) {
+      updateData = { broker_approve };
+    }
+
+    // Update the shipment with the appropriate data
+    const shipment = await Shipment.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
     if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
+
     return successResponse(res, "Shipment updated successfully", 200, shipment);
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
 });
+
+// exports.updateShipmentData = catchAsync(async (req, res) => {
+//   try {
+//     const updateData = req.body;
+//     if (!updateData || Object.keys(updateData).length === 0) {
+//       return errorResponse(res, "No data provided to update", 400, false);
+//     }
+//     const shipment = await Shipment.findByIdAndUpdate(
+//       req.params.id,
+//       updateData,
+//       {
+//         new: true,
+//         runValidators: true,
+//       }
+//     );
+//     if (!shipment) {
+//       return errorResponse(res, "Shipment not found", 404, false);
+//     }
+//     return successResponse(res, "Shipment updated successfully", 200, shipment);
+//   } catch (error) {
+//     return errorResponse(res, error.message || "Internal Server Error", 500);
+//   }
+// });
 
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
@@ -248,6 +246,13 @@ exports.deleteShipment = catchAsync(async (req, res) => {
       return errorResponse(res, "Shipment not found", 404, false);
     }
     const shipment = await Shipment.findByIdAndDelete(req.params.id);
+    if(shipment?.uploadedBol)
+      {
+        const deleteResponse = await deleteFile(shipment.uploadedBol);
+        if (!deleteResponse.status) {
+          return errorResponse(res, "Failed to delete file from Cloud", 500, false);
+        }
+      }
 
     if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);

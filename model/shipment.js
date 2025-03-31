@@ -108,6 +108,18 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  broker_dispatch_sheet: {
+    type: String,
+    default: null,
+  },
+  carrier_dispatch_sheet: {
+    type: String,
+    default: null,
+  },
+  broker_approve: {
+    type: Boolean,
+    default: false,
+  },
   created_at: {
     type: Date,
     default: Date.now,
