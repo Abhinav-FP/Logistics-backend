@@ -225,7 +225,7 @@ exports.updateStatusNotification = catchAsync(async (req, res) => {
 
 
 exports.updateReviewNotification = catchAsync(async (req, res) => {
-    const { ShipmentId, receiverBrokerId, receiverDriverId, receiverCarrierId, receiverShipperId, receiverCustomerId } = req.body;
+    const { ShipmentId, receiverBrokerId, receiverDriverId, receiverCarrierId, receiverShipperId, receiverCustomerId  ,text} = req.body;
     try {
         const existingNotification = await NotificationModel.findOne({ ShipmentId: ShipmentId });
         await NotificationModel.findOneAndUpdate(existingNotification._id, {

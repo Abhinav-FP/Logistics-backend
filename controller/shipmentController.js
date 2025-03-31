@@ -89,9 +89,9 @@ exports.createShipment = catchAsync(async (req, res) => {
 exports.updateShipment = catchAsync(async (req, res) => {
   try {
     const updateData = req.body;
-    console.log("req.file",req.file);
-    console.log("body",req?.body);
-    return successResponse(res, "Consoled successfully", 200);
+    // console.log("req.file",req.file);
+    // console.log("body",req?.body);
+    // return successResponse(res, "Consoled successfully", 200);
     if (!updateData || Object.keys(updateData).length === 0) {
       return errorResponse(res, "No data provided to update", 400, false);
     }
@@ -140,6 +140,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
           receiverBrokerId: shipment.broker_id,
           receiverCustomerId: shipment.customer_id,
           ShipmentId: shipment._id,
+          text : "The user review has been delivered"
         },
       });
     }
@@ -152,6 +153,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
           receiverBrokerId: shipment.broker_id,
           receiverDriverId: shipment.driver_id,
           receiverShipperId: shipment.shipper_id,
+          text : "The user review has been delivered"
         },
       })
     }
@@ -190,7 +192,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
     // Case 1: Both carrier_id and fileUrl are provided
     if (carrier_id && fileUrl) {
       updateData = { carrier_id, broker_dispatch_sheet: fileUrl };
-      text="Carrier and dispatch shhet assigned successfully";
+      text="Carrier and dispatch sheet assigned successfully";
     }
     // Case 2: Only fileUrl is provided
     else if (fileUrl) {
@@ -208,6 +210,45 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
       new: true,
       runValidators: true,
     });
+
+    if (carrier_id && fileUrl) {
+      updateData = { carrier_id, broker_dispatch_sheet: fileUrl };
+      text="Carrier and dispatch sheet assigned successfully";
+      await updateReviewNotification({
+        body: {
+          senderId: shipment.shipper_id,
+          ShipmentId: shipment._id,
+          receiverCarrierId: shipment.carrier_id,
+          receiverBrokerId: shipment.broker_id,
+          receiverDriverId: shipment.driver_id,
+          receiverShipperId: shipment.shipper_id,
+          text : text
+        },
+      })
+      
+    }
+    // Case 2: Only fileUrl is provided
+    else if (fileUrl) {
+      updateData = { carrier_dispatch_sheet: fileUrl };
+      text="Dispatch sheet sent back to broker successfully";
+      await updateReviewNotification({
+        body: {
+          senderId: shipment.shipper_id,
+          ShipmentId: shipment._id,
+          receiverCarrierId: shipment.carrier_id,
+          receiverBrokerId: shipment.broker_id,
+          receiverDriverId: shipment.driver_id,
+          receiverShipperId: shipment.shipper_id,
+          text : text
+          
+        },
+      })
+    }
+    // Case 3: Only broker_approve (boolean) is provided
+    else if (broker_approve !== undefined) {
+      updateData = { broker_approve };
+      text="Dispatch sheet approved successfully";
+    }
 
     if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);
