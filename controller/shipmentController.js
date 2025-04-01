@@ -2,11 +2,11 @@ const PDFDocument = require('pdfkit');
 const pdf = require("html-pdf-node");
 const Shipment = require("../model/shipment");
 const Driver = require("../model/driver.js");
-const { validationErrorResponse, errorResponse, successResponse, } = require("../utils/ErrorHandling");
+const { errorResponse, successResponse, } = require("../utils/ErrorHandling");
 const catchAsync = require("../utils/catchAsync");
 const notification = require("../model/Notification")
 const BOL = require("../Email/bol.js");
-const { createNotification, updateNotification, updateStatusNotification, updateReviewNotification } = require('./Notification.js'); // Import the Notification function
+const { createNotification } = require('./Notification.js'); // Import the Notification function
 const { AddDirection } = require('./directionsController.js');
 const { deleteFile } = require('../utils/S3.js');
 
@@ -41,11 +41,8 @@ exports.createShipment = catchAsync(async (req, res) => {
         false
       );
     }
-
-
     const shipmentData = {};
     const schemaFields = Object.keys(Shipment.schema.paths);
-
     schemaFields.forEach((field) => {
       if (req.body[field] !== undefined) {
         shipmentData[field] = req.body[field];
@@ -60,13 +57,20 @@ exports.createShipment = catchAsync(async (req, res) => {
     const shipment = await Shipment.create(shipmentData);
     await createNotification({
       body: {
-        senderId: shipper_id,
-        receiverBrokerId: [shipment.broker_id].map(id => ({ Receiver: id })),
-        receiverCustomerId: [shipment.customer_id].map(id => ({ Receiver: id })),
+        ReciverId:shipment.broker_id,
+        SenderId: shipment.shipper_id ,
         ShipmentId: shipment._id,
+        text: "A new shipment has been assigned to you."
       },
     });
-
+    await createNotification({
+      body: {
+        ReciverId: shipment.customer_id,
+        SenderId: shipment.shipper_id,
+        ShipmentId: shipment._id,
+        text: "Your shipment has been successfully assigned."
+      },
+    });
     await AddDirection({
       body: {
         pickup_location: shipment.pickup_location,
@@ -89,9 +93,6 @@ exports.createShipment = catchAsync(async (req, res) => {
 exports.updateShipment = catchAsync(async (req, res) => {
   try {
     const updateData = req.body;
-    // console.log("req.file",req.file);
-    // console.log("body",req?.body);
-    // return successResponse(res, "Consoled successfully", 200);
     if (!updateData || Object.keys(updateData).length === 0) {
       return errorResponse(res, "No data provided to update", 400, false);
     }
@@ -107,61 +108,81 @@ exports.updateShipment = catchAsync(async (req, res) => {
       return errorResponse(res, "Shipment not found", 404, false);
     }
     if (updateData?.broker_id) {
-      await updateStatusNotification({
+      await createNotification({
         body: {
-          senderId: shipment.shipper_id,
-          receiverBrokerId: updateData.broker_id,
-          receiverCustomerId: updateData.customer_id,
+          senderId: shipper_id,
+          ReciverId: shipment.carrier_id,
+          SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
-          status: false,
+          text : "Assign Shipement "
         },
-      })
+      });
     }
     if (updateData.carrier_id) {
-      await updateNotification({
+      await createNotification({
         body: {
-          senderId: shipment.shipper_id,
+          senderId: shipper_id,
+          ReciverId: shipment.customer_id,
+          SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
-          receiverCarrierId: updateData.carrier_id,
-          receiverDriverId: updateData.driver_id,
-          receiverBrokerId: shipment.broker_id,
-          receiverCustomerId: shipment.customer_id,
-          ShipmentId: shipment._id,
+          text : "Assign Shipement "
         },
       });
     }
     if (updateData.driver_id) {
-      await updateNotification({
+      await createNotification({
         body: {
           senderId: shipment.shipper_id,
+          ReciverId: shipment.driver_id,
+          SenderId: shipment.carrier_id,
           ShipmentId: shipment._id,
-          receiverCarrierId: updateData.carrier_id,
-          receiverDriverId: updateData.driver_id,
-          receiverBrokerId: shipment.broker_id,
-          receiverCustomerId: shipment.customer_id,
-          ShipmentId: shipment._id,
-          text : "The user review has been delivered"
         },
       });
     }
     if (updateData.review) {
-      await updateReviewNotification({
+      await createNotification({
         body: {
           senderId: shipment.shipper_id,
+          ReciverId: shipment.driver_id,
+          SenderId: shipment.customer_id,
           ShipmentId: shipment._id,
-          receiverCarrierId: shipment.carrier_id,
-          receiverBrokerId: shipment.broker_id,
-          receiverDriverId: shipment.driver_id,
-          receiverShipperId: shipment.shipper_id,
           text : "The user review has been delivered"
         },
-      })
-    }
+      });
+      await createNotification({
+        body: {
+          senderId: shipment.shipper_id,
+          ReciverId: shipment.broker_id,
+          SenderId: shipment.customer_id,
+          ShipmentId: shipment._id,
+          text : "The user review has been delivered"
 
+        },
+      });
+      await createNotification({
+        body: {
+          senderId: shipment.shipper_id,
+          ReciverId: shipment.carrier_id,
+          SenderId: shipment.customer_id,
+          ShipmentId: shipment._id,
+          text : "The user review has been delivered"
+
+        },
+      });
+      await createNotification({
+        body: {
+          senderId: shipment.shipper_id,
+          ReciverId: shipment.driver_id,
+          SenderId: shipment.customer_id,
+          ShipmentId: shipment._id,
+          text : "The user review has been delivered"
+
+        },
+      });
+    }
     if (updateData.carrier_id) {
       return successResponse(res, "Carrier Assigned successfully", 200, shipment);
     }
-
     if (updateData.review) {
       return successResponse(res, "Review Add successfully", 200, shipment);
     }
@@ -187,7 +208,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
       return errorResponse(res, "Invalid request: No valid update fields provided", 400, false);
     }
 
-    let updateData = {},text="";
+    let updateData = {},text="" ,text1 ="" , text2="" ;
 
     // Case 1: Both carrier_id and fileUrl are provided
     if (carrier_id && fileUrl) {
@@ -213,43 +234,46 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
 
     if (carrier_id && fileUrl) {
       updateData = { carrier_id, broker_dispatch_sheet: fileUrl };
-      text="Carrier and dispatch sheet assigned successfully";
-      await updateReviewNotification({
+      text1="Carrier and dispatch sheet assigned successfully";
+      await createNotification({
         body: {
           senderId: shipment.shipper_id,
+          ReciverId: shipment.carrier_id,
+          SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
-          receiverCarrierId: shipment.carrier_id,
-          receiverBrokerId: shipment.broker_id,
-          receiverDriverId: shipment.driver_id,
-          receiverShipperId: shipment.shipper_id,
-          text : text
+          text : text1
         },
-      })
+      });
       
     }
     // Case 2: Only fileUrl is provided
     else if (fileUrl) {
       updateData = { carrier_dispatch_sheet: fileUrl };
-      text="Dispatch sheet sent back to broker successfully";
-      await updateReviewNotification({
+      text2="Dispatch sheet sent back to broker successfully";
+      await createNotification({
         body: {
           senderId: shipment.shipper_id,
+          ReciverId: shipment.broker_id,
+          SenderId: shipment.carrier_id,
           ShipmentId: shipment._id,
-          receiverCarrierId: shipment.carrier_id,
-          receiverBrokerId: shipment.broker_id,
-          receiverDriverId: shipment.driver_id,
-          receiverShipperId: shipment.shipper_id,
-          text : text
-          
+          text : text2
         },
-      })
+      });
     }
     // Case 3: Only broker_approve (boolean) is provided
     else if (broker_approve !== undefined) {
       updateData = { broker_approve };
-      text="Dispatch sheet approved successfully";
+      text1 ="Dispatch sheet approved successfully";
+      await createNotification({
+        body: {
+          senderId: shipment.shipper_id,
+          ReciverId: shipment.carrier_id,
+          SenderId: shipment.broker_id,
+          ShipmentId: shipment._id,
+          text : text1
+        },
+      });
     }
-
     if (!shipment) {
       return errorResponse(res, "Shipment not found", 404, false);
     }
@@ -260,28 +284,6 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
   }
 });
 
-// exports.updateShipmentData = catchAsync(async (req, res) => {
-//   try {
-//     const updateData = req.body;
-//     if (!updateData || Object.keys(updateData).length === 0) {
-//       return errorResponse(res, "No data provided to update", 400, false);
-//     }
-//     const shipment = await Shipment.findByIdAndUpdate(
-//       req.params.id,
-//       updateData,
-//       {
-//         new: true,
-//         runValidators: true,
-//       }
-//     );
-//     if (!shipment) {
-//       return errorResponse(res, "Shipment not found", 404, false);
-//     }
-//     return successResponse(res, "Shipment updated successfully", 200, shipment);
-//   } catch (error) {
-//     return errorResponse(res, error.message || "Internal Server Error", 500);
-//   }
-// });
 
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {

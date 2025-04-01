@@ -2,36 +2,35 @@
 const catchAsync = require("../utils/catchAsync");
 const NotificationModel = require("../model/Notification");
 const ObjectId = require("mongoose").Types.ObjectId;
+const mongoose = require("mongoose");
+
 
 exports.createNotification = catchAsync(async (req, res) => {
     try {
         const {
-            senderId,
-            receiverShipperId,
-            receiverCustomerId,
-            receiverBrokerId,
-            receiverCarrierId,
+            SenderId ,
+            ReciverId,
             ShipmentId,
+            text
         } = req.body;
-        const record = new NotificationModel({
-            senderId,
-            receiverShipperId,
-            receiverCustomerId: receiverCustomerId.map((obj) => ({
-                Receiver: obj.Receiver,
-                IsRead :false
-            })),
-            receiverBrokerId: receiverBrokerId.map((obj) => ({
-                Receiver: obj.Receiver,
-                IsRead :false
-            })),
-            receiverCarrierId,
+
+        console.log("req.body:", req.body);
+
+        const recordData = {
+            SenderId,
             ShipmentId,
-        });
+            ReciverId,
+            text
+        };
+   
+        const record = new NotificationModel(recordData);
         const data = await record.save();
+        console.log("Saved Data:", data);
     } catch (error) {
-        console.error(error);
+        console.error("Error saving notification:", error);
     }
 });
+
 exports.updateNotification = catchAsync(async (req, res) => {
     try {
         const { receiverCarrierId, ShipmentId, receiverDriverId, receiverCustomerId, receiverBrokerId } = req.body;
@@ -72,65 +71,49 @@ exports.updateNotification = catchAsync(async (req, res) => {
     }
 });
 
-
 exports.NotificationGet = catchAsync(async (req, res) => {
     const UserId = req.user.id;
+
     try {
         const query = {
-            $and: [
-                {
-                    $or: [
-                        { "receiverShipperId.Receiver": UserId },
-                        { "receiverCustomerId.Receiver": UserId },
-                        { "receiverBrokerId.Receiver": UserId },
-                        { "receiverCarrierId.Receiver": UserId },
-                    ],
-                },
-                {
-                    $or: [
-                        {
-                            "receiverShipperId.IsRead": false,
-                            "receiverShipperId.Receiver": UserId,
-                        },
-                        {
-                            "receiverCustomerId.IsRead": false,
-                            "receiverCustomerId.Receiver": UserId,
-                        },
-                        {
-                            "receiverBrokerId.IsRead": false,
-                            "receiverBrokerId.Receiver": UserId,
-                        },
-                        {
-                            "receiverCarrierId.IsRead": false,
-                            "receiverCarrierId.Receiver": UserId,
-                        },
-                    ],
-                },
+            $or: [
+                { "ReciverId":  UserId  , IsRead :false}
             ],
         };
-        const notification = await NotificationModel.find(query)
+
+        const notifications = await NotificationModel.find(query)
             .sort({ createdAt: -1 })
-            .populate("ShipmentId")
-            .populate("senderId", "-password")
-            .populate("receiverShipperId.Receiver", "-password")
-            .populate("receiverCustomerId.Receiver", "-password")
-            .populate("receiverBrokerId.Receiver", "-password")
-            .populate("receiverCarrierId.Receiver", "-password");
-        const notificationCount = notification.length;
+            .populate({
+                path: "ShipmentId",
+                select: "name" // Only fetch the name field
+            })
+            .populate({
+                path: "ReciverId",
+                select: "name email role" // Only fetch name and email from ReciverId.Receiver
+            }).populate({
+                path: "SenderId",
+                select: "name email role" // Only fetch name and email from ReciverId.Receiver
+            });
+
+        const notificationCount = notifications.length;
+
+        console.log("Fetched Notifications:", notifications);
+
         res.json({
             status: true,
-            data: notification,
+            data: notifications,
             count: notificationCount,
             message: "Notifications fetched successfully",
         });
     } catch (error) {
-        console.error("Error:", error);
-        res.json({
+        console.error("Error fetching notifications:", error);
+        res.status(500).json({
             status: false,
             message: error.message || "Failed to fetch notifications",
         });
     }
 });
+
 
 exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     const UserId = req.user.id;
@@ -146,52 +129,18 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     try {
         const notification = await NotificationModel.findOne({
             ShipmentId: shipmentId,
+            ReciverId: UserId, // Check if UserId matches ReciverId
         });
 
         if (!notification) {
             return res.status(404).json({
                 status: false,
-                message: "Notification not found",
+                message: "Notification not found for this user and shipment",
             });
         }
 
-        let updated = false;
-
-        notification.receiverShipperId.forEach((receiver) => {
-            if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
-                receiver.IsRead = true;
-                updated = true;
-            }
-        });
-
-        notification.receiverCustomerId.forEach((receiver) => {
-            if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
-                receiver.IsRead = true;
-                updated = true;
-            }
-        });
-
-        notification.receiverBrokerId.forEach((receiver) => {
-            if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
-                receiver.IsRead = true;
-                updated = true;
-            }
-        });
-
-        notification.receiverCarrierId.forEach((receiver) => {
-            if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
-                receiver.IsRead = true;
-                updated = true;
-            }
-        });
-
-        if (!updated) {
-            return res.status(404).json({
-                status: false,
-                message: "UserId not found in any receivers",
-            });
-        }
-
+        // Update the IsRead field to true
+        notification.IsRead = true;
         const result = await notification.save();
 
         res.json({
@@ -208,6 +157,7 @@ exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     }
 });
 
+
 exports.updateStatusNotification = catchAsync(async (req, res) => {
     const { ShipmentId, receiverCustomerId, receiverBrokerId } = req.body;
     try {
@@ -223,41 +173,39 @@ exports.updateStatusNotification = catchAsync(async (req, res) => {
     }
 });
 
-
 exports.updateReviewNotification = catchAsync(async (req, res) => {
-    const { ShipmentId, receiverBrokerId, receiverDriverId, receiverCarrierId, receiverShipperId, receiverCustomerId  ,text} = req.body;
+    console.log("req.body", req.body)
+    const { ShipmentId, receiverBrokerId, receiverDriverId, receiverCarrierId, receiverShipperId, receiverCustomerId, text1, text2, text } = req.body;
+    // broker  assign dispatch  sheet carrire then  carrier text 1 
+    // carrire  assign dispatch  sheet broker then  carrier text 2 
+    // broker  Reassign dispatch  sheet carrire then  carrier text 1
+
     try {
         const existingNotification = await NotificationModel.findOne({ ShipmentId: ShipmentId });
         await NotificationModel.findOneAndUpdate(existingNotification._id, {
             $set: {
-                'receiverDriverId': [{ Receiver: receiverDriverId, IsRead: false, }],
+                'receiverDriverId': [{ Receiver: receiverDriverId, IsRead: false, text: text }],
             },
-            Text: "The user review has been delivered",
         }, { new: true });
         await NotificationModel.findOneAndUpdate(existingNotification._id, {
             $set: {
-                'receiverCarrierId': [{ Receiver: receiverCarrierId, IsRead: false, }],
+                'receiverCarrierId': [{ Receiver: receiverCarrierId, IsRead: false, text: text1 ? text1 : text }],
             },
-            Text: "The user review has been delivered",
         }, { new: true });
         await NotificationModel.findOneAndUpdate(existingNotification._id, {
             $set: {
-                'receiverBrokerId': [{ Receiver: receiverBrokerId, IsRead: false, }],
+                'receiverBrokerId': [{ Receiver: receiverBrokerId, IsRead: false, text: text2 ? text2 : text }],
             },
-            Text: "The user review has been delivered",
         }, { new: true });
         await NotificationModel.findOneAndUpdate(existingNotification._id, {
             $set: {
-                'receiverShipperId': [{ Receiver: receiverShipperId, IsRead: false, }],
+                'receiverShipperId': [{ Receiver: receiverShipperId, IsRead: false, text: text }],
             },
-
-            Text: "The user review has been delivered",
         }, { new: true });
         await NotificationModel.findOneAndUpdate(existingNotification._id, {
             $set: {
-                'receiverCustomerId': [{ Receiver: receiverCustomerId, IsRead: true, }],
+                'receiverCustomerId': [{ Receiver: receiverCustomerId, IsRead: true, text: text }],
             },
-            Text: "The user review has been delivered",
         }, { new: true });
     } catch (error) {
         console.log("eror", error);
