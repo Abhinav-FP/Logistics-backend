@@ -142,40 +142,36 @@ exports.updateShipment = catchAsync(async (req, res) => {
     if (updateData.review) {
       await createNotification({
         body: {
-          senderId: shipment.shipper_id,
           ReciverId: shipment.driver_id,
           SenderId: shipment.customer_id,
           ShipmentId: shipment._id,
-          text : "The user review has been delivered"
+          text : "The User has added a review"
         },
       });
       await createNotification({
         body: {
-          senderId: shipment.shipper_id,
           ReciverId: shipment.broker_id,
           SenderId: shipment.customer_id,
           ShipmentId: shipment._id,
-          text : "The user review has been delivered"
+          text : "The User has added a review"
 
         },
       });
       await createNotification({
         body: {
-          senderId: shipment.shipper_id,
           ReciverId: shipment.carrier_id,
           SenderId: shipment.customer_id,
           ShipmentId: shipment._id,
-          text : "The user review has been delivered"
+          text : "The User has added a review"
 
         },
       });
       await createNotification({
         body: {
-          senderId: shipment.shipper_id,
-          ReciverId: shipment.driver_id,
+          ReciverId: shipment.shipper_id,
           SenderId: shipment.customer_id,
           ShipmentId: shipment._id,
-          text : "The user review has been delivered"
+          text : "The User has added a review"
 
         },
       });

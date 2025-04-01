@@ -269,97 +269,90 @@ exports.forgotOTP = catchAsync(async (req, res) => {
 });
 
 
-
 exports.NotificationDriverGet = catchAsync(async (req, res) => {
     const UserId = req.user.id;
+  
     try {
-        const query = {
-            $and: [
-                {
-                    $or: [
-                        { "receiverDriverId.Receiver": UserId },
-                    ]
-                },
-                {
-                    $or: [
-                        { "receiverDriverId.IsRead": false, "receiverDriverId.Receiver": UserId },
-
-                    ]
-                }
-            ]
-        };
-
-
-        const notification = await NotificationModel.find(query).sort({ createdAt: -1 })
-            .populate("ShipmentId")
-            .populate("receiverDriverId.Receiver", "-password");
-        const notificationCount = notification.length;
-        res.json({
-            status: true,
-            count: notificationCount,
-            data: notification,
-            message: 'Notifications fetched successfully',
+      const query = {
+        $or: [{ ReciverId: UserId, IsRead: false }],
+      };
+  
+      const notifications = await NotificationModel.find(query)
+        .sort({ createdAt: -1 })
+        .populate({
+          path: "ShipmentId",
+          select: "name", // Only fetch the name field
+        })
+        .populate({
+          path: "ReciverId",
+          select: "name email role", // Only fetch name and email from ReciverId.Receiver
+        })
+        .populate({
+          path: "SenderId",
+          select: "name email role", // Only fetch name and email from ReciverId.Receiver
         });
+  
+      const notificationCount = notifications.length;
+      res.json({
+        status: true,
+        data: notifications,
+        count: notificationCount,
+        message: "Notifications fetched successfully",
+      });
     } catch (error) {
-        console.error("Error:", error);
-        res.json({
-            status: false,
-            message: error.message || 'Failed to fetch notifications',
-        });
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({
+        status: false,
+        message: error.message || "Failed to fetch notifications",
+      });
     }
-});
+  });
 
 exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
-    const UserId = req.user.id;
-    const { shipmentId } = req.body;
-
-    if (!UserId || !shipmentId) {
-        return res.status(400).json({
-            status: false,
-            message: "UserId and ShipmentId are required",
-        });
-    }
-
+    const { id } = req.body;
     try {
-        const notification = await NotificationModel.findOne({
-            ShipmentId: shipmentId,
-            ReciverId: UserId, // Check if UserId matches ReciverId
+      if (!id) {
+        return res.status(400).json({
+          status: false,
+          message: "ID is required",
         });
-
-        if (!notification) {
-            return res.status(404).json({
-                status: false,
-                message: "Notification not found for this user and shipment",
-            });
-        }
-
-        // Update the IsRead field to true
-        notification.IsRead = true;
-        const result = await notification.save();
-
-        res.json({
-            status: true,
-            message: "Notification marked as read successfully",
-            notification: result,
+      }
+  
+      // Find notification by ID
+      const notification = await NotificationModel.findById(id);
+  
+      if (!notification) {
+        return res.status(404).json({
+          status: false,
+          message: "Notification not found",
         });
+      }
+  
+      // Update the isRead field to true
+      notification.IsRead = true;
+      await notification.save();
+  
+      res.json({
+        status: true,
+        message: "Notification marked as read successfully",
+        notification,
+      });
     } catch (error) {
-        console.error("Error occurred:", error);
-        res.status(500).json({
-            status: false,
-            message: error.message || "Failed to mark notification as read",
-        });
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({
+        status: false,
+        message: error.message || "Failed to mark notification as read",
+      });
     }
-});
+  });
 
 exports.updateShipmentData = catchAsync(async (req, res) => {
     try {
+        const userId=req.user.id;
         const Id = req.params.id;
-        const notification = await NotificationModel.findOneAndUpdate(
-            { ShipmentId: Id },
-            {
-                receiverDriverId: []
-            },
-            { new: true }
+        const notification = await NotificationModel.findOneAndDelete(
+            { ShipmentId: Id, ReciverId:userId },
+            
         );
         const shipments = await shipment.findOneAndUpdate(
             { _id: Id },

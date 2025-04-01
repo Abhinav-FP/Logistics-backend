@@ -17,7 +17,7 @@ router.post("/login", Appcontroller.login);
 router.get("/get-notification", verifyToken, Appcontroller.NotificationDriverGet);
 router.post("/read-notification", verifyToken, Appcontroller.MarkNotificationAsRead);
 router.post("/update_direction", Appcontroller.updateDirections);
-router.get("/shipment_update/:id", Appcontroller.updateShipmentData);
+router.get("/shipment_update/:id",verifyToken, Appcontroller.updateShipmentData);
 router.get("/driver_reached/:id", Appcontroller.DriverReached);
 router.post("/shipment_sign/:id", upload.single('file'), Appcontroller.updateShipmentSign);
 router.get("/dashboard", verifyToken, Appcontroller.DashboardDriverApi);
