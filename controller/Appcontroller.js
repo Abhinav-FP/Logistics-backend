@@ -268,6 +268,8 @@ exports.forgotOTP = catchAsync(async (req, res) => {
     }
 });
 
+
+
 exports.NotificationDriverGet = catchAsync(async (req, res) => {
     const UserId = req.user.id;
     try {
@@ -310,47 +312,41 @@ exports.NotificationDriverGet = catchAsync(async (req, res) => {
 exports.MarkNotificationAsRead = catchAsync(async (req, res) => {
     const UserId = req.user.id;
     const { shipmentId } = req.body;
+
     if (!UserId || !shipmentId) {
         return res.status(400).json({
             status: false,
-            message: 'UserId and ShipmentId are required',
+            message: "UserId and ShipmentId are required",
         });
     }
+
     try {
-        const notification = await NotificationModel.findOne({ ShipmentId: shipmentId });
+        const notification = await NotificationModel.findOne({
+            ShipmentId: shipmentId,
+            ReciverId: UserId, // Check if UserId matches ReciverId
+        });
+
         if (!notification) {
             return res.status(404).json({
                 status: false,
-                message: 'Notification not found',
-            });
-        }
-        let updated = false;
-        notification.receiverDriverId.forEach(receiver => {
-            if (receiver.Receiver && receiver.Receiver.equals(UserId)) {
-                receiver.IsRead = true;
-                updated = true;
-            }
-        });
-
-        if (!updated) {
-            return res.status(404).json({
-                status: false,
-                message: 'UserId not found in any receivers',
+                message: "Notification not found for this user and shipment",
             });
         }
 
+        // Update the IsRead field to true
+        notification.IsRead = true;
         const result = await notification.save();
 
         res.json({
             status: true,
-            message: 'Notification marked as read successfully',
+            message: "Notification marked as read successfully",
             notification: result,
         });
     } catch (error) {
         console.error("Error occurred:", error);
         res.status(500).json({
             status: false,
-            message: error.message || 'Failed to mark notification as read',
+            message: error.message || "Failed to mark notification as read",
         });
     }
 });
