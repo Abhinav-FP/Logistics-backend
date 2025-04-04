@@ -555,3 +555,70 @@ exports.getBOL = catchAsync(async (req, res) => {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
 });
+
+const QRCode = require('qrcode');
+const { PassThrough } = require('stream');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client } = require('@aws-sdk/client-s3');
+
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+});
+// Define the UPLOADS_FOLDER
+const UPLOADS_FOLDER = "uploads/";
+
+const generateAndUploadQRCode = async (url) => {
+    try {
+        // Generate QR code as a Buffer
+        const qrCodeImage = await QRCode.toBuffer(url);
+
+        // Convert the image to a readable stream for S3 upload
+        const qrStream = new PassThrough();
+        qrStream.end(qrCodeImage);
+
+        // Define the key for the uploaded QR code image
+        const key = `${UPLOADS_FOLDER}${Date.now().toString()}-QRCode.png`;
+
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: key,
+            Body: qrCodeImage, // Directly upload the Buffer
+            ContentType: 'image/png',
+            ContentDisposition: 'inline',
+        };
+
+        // Upload QR code image to S3
+        const command = new PutObjectCommand(uploadParams);
+        await s3Client.send(command);
+
+        // Construct the S3 file URL
+        const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+        return s3Url;
+    } catch (err) {
+        console.error('Error generating or uploading QR code:', err);
+        return "Error generating or uploading QR code";    }
+};
+
+exports.generateQRCode = catchAsync(async (req, res) => {
+    try {
+        const { url } = req.body;
+        if (!url) {
+            return errorResponse(res, "Please provide url", 400);
+        }
+
+        const result = await generateAndUploadQRCode(url);
+        return successResponse(
+            res,
+            "Shipment created successfully",
+            201,
+            result
+        );
+    } catch (error) {
+        console.error("error", error);
+        return errorResponse(res, "An unknown error occurred", 500);
+    }
+});
