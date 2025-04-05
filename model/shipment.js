@@ -108,6 +108,14 @@ const shipmentSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  reviewText: {
+    type: String,
+    default: null
+  },
+  qrcode: {
+    type: String,
+    default: null
+  },
   broker_dispatch_sheet: {
     type: String,
     default: null,

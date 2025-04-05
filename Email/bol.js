@@ -14,7 +14,7 @@ module.exports = ({shipments}) => {
 				<table cellspacing="0" cellpadding="0" style="width: 100%;">
 					<tr>
 						<td width="50%">
-							<img src="https://logistics-sand.vercel.app/Logo.png" alt="img" />
+							<img src="https://logistics-sand.vercel.app/Logo.png" alt="img" height="50px"/>
 						</td>
 						<td width="50%">
 							<h2 style="color: #1B1B1B;font-size: 16px;padding-bottom: 5px;margin: 0;text-transform: uppercase;font-weight: 500;">Short form of bill of landing</h2>
