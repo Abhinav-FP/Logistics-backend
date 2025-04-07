@@ -1,5 +1,7 @@
 module.exports = ({shipments}) => {
-	// console.log("shipments",shipments);
+	const base64Image = shipments?.customer_sign
+    ?.replace(/(\r\n|\n|\r)/gm, "") // Remove line breaks
+    ?.replace(/^data:image\/png;base64,/, ""); 
   return `
          <!DOCTYPE html>
   <html>
@@ -296,10 +298,10 @@ module.exports = ({shipments}) => {
 					   	   	  <tr>
 					   	   	  	<td style="color: #1B1B1B;;font-size: 14px;padding: 5px 10px 7px 0;">Driver Signature:</td>
 					   	   	  	<td style="color: #1B1B1B;font-size: 14px;padding: 5px 10px 7px 10px;">
-					   	   	  	    <img 
-										src={shipments?.driver_sign || ""} 
-										width="100px" 
-										height="50px" 
+					   	   	  	    <img
+									src="${shipments?.driver_sign || ""}"
+									width="100px"
+									height="50px"
 									/>
 					   	   	  	</td>
 					   	   	  </tr>
@@ -321,10 +323,16 @@ module.exports = ({shipments}) => {
 							   	   	  <tr>
 							   	   	  	<td width="45%" style="color: #1B1B1B;;font-size: 14px;padding: 7px 10px 5px 10px;">signature :</td>
 							   	   	  	<td width="65%" style="color: #1B1B1B;font-size: 14px;padding: 10px 10px 5px 10px;">
-										<img src={shipments?.customer_sign || ""}
-					   	   	  	    width="100px" 
-                                    height="50px" 
-					   	   	  	    /></td>
+												${
+													base64Image
+													  ? `<img src="data:image/png;base64,${base64Image}" 
+															  width="100px" 
+															  height="50px" 
+															  alt="Customer Signature"
+															  style="object-fit: contain; border: 1px solid #ccc;" />`
+													  : "<p>NA</p>"
+												  }
+									</td>
 							   	   	  </tr>
 							   	   </table>
 					   	   	  		

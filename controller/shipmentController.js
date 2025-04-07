@@ -251,76 +251,6 @@ exports.updateShipment = catchAsync(async (req, res) => {
   }
 });
 
-exports.UpdateReview = catchAsync(async (req, res) => {
-  try {
-    const { review, reviewText } = req.body;
-    const fileUrl = req?.file?.location;
-
-    if (!review) {
-      return errorResponse(res, "Please provide a review", 400, false);
-    }
-
-    let updateData = {};
-
-    if (reviewText) {
-      updateData = { review, reviewText, customer_sign: fileUrl };
-    }
-    else{
-      updateData = { review, customer_sign: fileUrl };
-    }
-
-    // Update the shipment with the appropriate data
-    const shipment = await Shipment.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!shipment) {
-      return errorResponse(res, "Shipment not found", 404, false);
-    }
-
-    await createNotification({
-      body: {
-        ReciverId: shipment.driver_id,
-        SenderId: shipment.customer_id,
-        ShipmentId: shipment._id,
-        text : "The User has added a review"
-      },
-    });
-    await createNotification({
-      body: {
-        ReciverId: shipment.broker_id,
-        SenderId: shipment.customer_id,
-        ShipmentId: shipment._id,
-        text : "The User has added a review"
-
-      },
-    });
-    await createNotification({
-      body: {
-        ReciverId: shipment.carrier_id,
-        SenderId: shipment.customer_id,
-        ShipmentId: shipment._id,
-        text : "The User has added a review"
-
-      },
-    });
-    await createNotification({
-      body: {
-        ReciverId: shipment.shipper_id,
-        SenderId: shipment.customer_id,
-        ShipmentId: shipment._id,
-        text : "The User has added a review"
-
-      },
-    });
-
-    return successResponse(res, text, 200, shipment);
-  } catch (error) {
-    return errorResponse(res, error.message || "Internal Server Error", 500);
-  }
-});
-
 exports.dispatchSheet = catchAsync(async (req, res) => {
   try {
     const { carrier_id, broker_approve } = req.body;
@@ -680,24 +610,4 @@ exports.getBOL = catchAsync(async (req, res) => {
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
-});
-
-exports.generateQRCode = catchAsync(async (req, res) => {
-    try {
-        const { url } = req.body;
-        if (!url) {
-            return errorResponse(res, "Please provide url", 400);
-        }
-
-        const result = await generateAndUploadQRCode(url);
-        return successResponse(
-            res,
-            "Shipment created successfully",
-            201,
-            result
-        );
-    } catch (error) {
-        console.error("error", error);
-        return errorResponse(res, "An unknown error occurred", 500);
-    }
 });
