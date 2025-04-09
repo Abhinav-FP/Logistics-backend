@@ -116,7 +116,7 @@ exports.createShipment = catchAsync(async (req, res) => {
         ReciverId: shipment.customer_id,
         SenderId: shipment.shipper_id,
         ShipmentId: shipment._id,
-        text: "Your shipment has been successfully assigned."
+        text: "A new shipment has been created for you."
       },
     });
     await AddDirection({
@@ -162,7 +162,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
           ReciverId: shipment.carrier_id,
           SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
-          text : "Assign Shipement "
+          text : "A new shipment has been assigned to you."
         },
       });
     }
@@ -173,7 +173,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
           ReciverId: shipment.customer_id,
           SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
-          text : "Assign Shipement "
+          text : "A new shipment has been assigned to you."
         },
       });
     }
@@ -189,10 +189,10 @@ exports.updateShipment = catchAsync(async (req, res) => {
       );
       await createNotification({
         body: {
-          senderId: shipment.shipper_id,
-          ReciverId: shipment.driver_id,
           SenderId: shipment.carrier_id,
+          ReciverId: shipment.driver_id,
           ShipmentId: shipment._id,
+          text :"A new shipment has been assigned to you."
         },
       });
     }
@@ -287,7 +287,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
 
     if (carrier_id && fileUrl) {
       updateData = { carrier_id, broker_dispatch_sheet: fileUrl };
-      text1="Carrier and dispatch sheet assigned successfully";
+      text1="The Broker has assigned a dispatch sheet to you.";
       await createNotification({
         body: {
           senderId: shipment.shipper_id,
@@ -302,7 +302,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
     // Case 2: Only fileUrl is provided
     else if (fileUrl) {
       updateData = { carrier_dispatch_sheet: fileUrl };
-      text2="Dispatch sheet sent back to broker successfully";
+      text2="The Carrier has sent back the dispatch sheet to you.";
       await createNotification({
         body: {
           senderId: shipment.shipper_id,
@@ -316,7 +316,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
     // Case 3: Only broker_approve (boolean) is provided
     else if (broker_approve !== undefined) {
       updateData = { broker_approve };
-      text1 ="Dispatch sheet approved successfully";
+      text1 ="Dispatch sheet has been approved by the broker.";
       await createNotification({
         body: {
           senderId: shipment.shipper_id,
