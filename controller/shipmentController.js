@@ -10,6 +10,54 @@ const { createNotification } = require('./Notification.js'); // Import the Notif
 const { AddDirection } = require('./directionsController.js');
 const { deleteFile } = require('../utils/S3.js');
 
+// Qr code generator code
+const QRCode = require('qrcode');
+const { PassThrough } = require('stream');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client } = require('@aws-sdk/client-s3');
+
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+});
+// Define the UPLOADS_FOLDER
+const UPLOADS_FOLDER = "uploads/";
+
+const generateAndUploadQRCode = async (url) => {
+    try {
+        // Generate QR code as a Buffer
+        const qrCodeImage = await QRCode.toBuffer(url);
+
+        // Convert the image to a readable stream for S3 upload
+        const qrStream = new PassThrough();
+        qrStream.end(qrCodeImage);
+
+        // Define the key for the uploaded QR code image
+        const key = `${UPLOADS_FOLDER}${Date.now().toString()}-QRCode.png`;
+
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: key,
+            Body: qrCodeImage, // Directly upload the Buffer
+            ContentType: 'image/png',
+            ContentDisposition: 'inline',
+        };
+
+        // Upload QR code image to S3
+        const command = new PutObjectCommand(uploadParams);
+        await s3Client.send(command);
+
+        // Construct the S3 file URL
+        const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+        return s3Url;
+    } catch (err) {
+        console.error('Error generating or uploading QR code:', err);
+        return "Error generating or uploading QR code";    }
+};
+
 exports.createShipment = catchAsync(async (req, res) => {
   try {
     const requiredFields = [
@@ -68,7 +116,7 @@ exports.createShipment = catchAsync(async (req, res) => {
         ReciverId: shipment.customer_id,
         SenderId: shipment.shipper_id,
         ShipmentId: shipment._id,
-        text: "Your shipment has been successfully assigned."
+        text: "A new shipment has been created for you."
       },
     });
     await AddDirection({
@@ -114,7 +162,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
           ReciverId: shipment.carrier_id,
           SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
-          text : "Assign Shipement "
+          text : "A new shipment has been assigned to you."
         },
       });
     }
@@ -125,17 +173,26 @@ exports.updateShipment = catchAsync(async (req, res) => {
           ReciverId: shipment.customer_id,
           SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
-          text : "Assign Shipement "
+          text : "A new shipment has been assigned to you."
         },
       });
     }
     if (updateData.driver_id) {
+      const result = await generateAndUploadQRCode(`https://tracebill.com/users/review/${req.params.id}`);
+      const shipments = await Shipment.findByIdAndUpdate(
+        req.params.id,
+        {qrcode:result},
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
       await createNotification({
         body: {
-          senderId: shipment.shipper_id,
-          ReciverId: shipment.driver_id,
           SenderId: shipment.carrier_id,
+          ReciverId: shipment.driver_id,
           ShipmentId: shipment._id,
+          text :"A new shipment has been assigned to you."
         },
       });
     }
@@ -230,7 +287,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
 
     if (carrier_id && fileUrl) {
       updateData = { carrier_id, broker_dispatch_sheet: fileUrl };
-      text1="Carrier and dispatch sheet assigned successfully";
+      text1="The Broker has assigned a dispatch sheet to you.";
       await createNotification({
         body: {
           senderId: shipment.shipper_id,
@@ -245,7 +302,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
     // Case 2: Only fileUrl is provided
     else if (fileUrl) {
       updateData = { carrier_dispatch_sheet: fileUrl };
-      text2="Dispatch sheet sent back to broker successfully";
+      text2="The Carrier has sent back the dispatch sheet to you.";
       await createNotification({
         body: {
           senderId: shipment.shipper_id,
@@ -259,7 +316,7 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
     // Case 3: Only broker_approve (boolean) is provided
     else if (broker_approve !== undefined) {
       updateData = { broker_approve };
-      text1 ="Dispatch sheet approved successfully";
+      text1 ="Dispatch sheet has been approved by the broker.";
       await createNotification({
         body: {
           senderId: shipment.shipper_id,
@@ -279,7 +336,6 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
 });
-
 
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
@@ -554,71 +610,4 @@ exports.getBOL = catchAsync(async (req, res) => {
   } catch (error) {
     return errorResponse(res, error.message || "Internal Server Error", 500);
   }
-});
-
-const QRCode = require('qrcode');
-const { PassThrough } = require('stream');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const { S3Client } = require('@aws-sdk/client-s3');
-
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-});
-// Define the UPLOADS_FOLDER
-const UPLOADS_FOLDER = "uploads/";
-
-const generateAndUploadQRCode = async (url) => {
-    try {
-        // Generate QR code as a Buffer
-        const qrCodeImage = await QRCode.toBuffer(url);
-
-        // Convert the image to a readable stream for S3 upload
-        const qrStream = new PassThrough();
-        qrStream.end(qrCodeImage);
-
-        // Define the key for the uploaded QR code image
-        const key = `${UPLOADS_FOLDER}${Date.now().toString()}-QRCode.png`;
-
-        const uploadParams = {
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: key,
-            Body: qrCodeImage, // Directly upload the Buffer
-            ContentType: 'image/png',
-            ContentDisposition: 'inline',
-        };
-
-        // Upload QR code image to S3
-        const command = new PutObjectCommand(uploadParams);
-        await s3Client.send(command);
-
-        // Construct the S3 file URL
-        const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-        return s3Url;
-    } catch (err) {
-        console.error('Error generating or uploading QR code:', err);
-        return "Error generating or uploading QR code";    }
-};
-
-exports.generateQRCode = catchAsync(async (req, res) => {
-    try {
-        const { url } = req.body;
-        if (!url) {
-            return errorResponse(res, "Please provide url", 400);
-        }
-
-        const result = await generateAndUploadQRCode(url);
-        return successResponse(
-            res,
-            "Shipment created successfully",
-            201,
-            result
-        );
-    } catch (error) {
-        console.error("error", error);
-        return errorResponse(res, "An unknown error occurred", 500);
-    }
 });
