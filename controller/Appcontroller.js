@@ -385,7 +385,7 @@ exports.DriverReached = catchAsync(async (req, res) => {
                 runValidators: true,
             }
         );
-
+        console.log("updatedShipment", updatedShipment)
         if (!updatedShipment) {
             return ApperrorResponses(res, "Shipment not found", 404, false);
         }
