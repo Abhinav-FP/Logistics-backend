@@ -40,13 +40,13 @@ module.exports = (otp, userName) => {
 </tr>
 <tr>
   <td style="padding: 0 0 20px 20px; text-align: left">
-    <p style="margin: 1px; font-size: 14px; font-weight: normal; color:#000000"> Thank you for using Logisitc ! </p>
+    <p style="margin: 1px; font-size: 14px; font-weight: normal; color:#000000"> Thank you for using TraceBill! </p>
   </td>
 </tr>
 <tr>
   <td style="padding: 0 0 45px 20px; text-align: left">
       <p style="margin: 1px; font-size: 14px; font-weight: normal; color:#000000"> Warm regards,
-, <br> The Logisitc Team 🌟</p>
+, <br> The TraceBill Team 🌟</p>
   </td>
 </tr>
 
