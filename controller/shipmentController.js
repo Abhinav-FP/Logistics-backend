@@ -97,7 +97,7 @@ exports.createShipment = catchAsync(async (req, res) => {
       }
     });
     shipmentData.shipper_id = shipper_id;
-    console.log("req.file", req.file);
+    // console.log("req.file", req.file);
     const fileUrl = req?.file?.location || null;
     if (fileUrl) {
       shipmentData.uploadedBol = fileUrl;
@@ -158,7 +158,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
     if (updateData?.broker_id) {
       await createNotification({
         body: {
-          senderId: shipper_id,
+          senderId: shipment?.shipper_id,
           ReciverId: shipment.carrier_id,
           SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
