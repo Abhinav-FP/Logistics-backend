@@ -97,8 +97,7 @@ exports.GetDrivers = catchAsync(async (req, res) => {
             return ApperrorResponses(res, "No users found", 404);
         }
         const driverResult = await Driver.findOne({ driver_id_ref: UserId });
-        const UserResult = await User.findOne({ _id: UserId }).select("name");
-
+        const UserResult = await User.findOne({ _id: UserId }).select("-password");
         if (!driverResult) {
             return ApperrorResponses(res, "Driver already exists.", 400);
         }
