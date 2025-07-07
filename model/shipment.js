@@ -29,7 +29,7 @@ const shipmentSchema = new mongoose.Schema({
   status: {
     type: String,
     default: 'pending',
-    enum: ['pending', 'transit', 'delivered'],
+    enum: ['pending', 'transit', 'delivered', 'Driver Assigned'],
   },
   shipper_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -94,7 +94,6 @@ const shipmentSchema = new mongoose.Schema({
   customer_sign: {
     type: String,
     default: null
-
   },
   driver_sign: {
     type: String,
@@ -128,6 +127,10 @@ const shipmentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  showBOL: {
+    type: Boolean,
+    default: false,
+  },
   created_at: {
     type: Date,
     default: Date.now,
@@ -135,26 +138,3 @@ const shipmentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Shipment", shipmentSchema);
-
-// Fields created from frontend and backend in notepad
-// name:title
-// description:description
-// pickup_location:pickup
-// drop_location:delivery
-// current_location:null
-// customer_id: To be added
-// status:Autofill null
-// shipperid:autofill
-// broker_id:brokerName
-// carrier_id:null initially
-// driver_id:initially
-
-
-// shippingDate: shippingDate
-// deliverydateexpect: deliveryDate
-// cost: estimatedCost
-// paymentStatus: paymentStatus
-// typeOfGoods:typeOfGoods (Is required?)
-// quantity: quantity
-// weight:weight
-// dimensions:dimensions
