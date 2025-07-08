@@ -161,7 +161,14 @@ exports.getShipmentDetilas = catchAsync(async (req, res) => {
         }
 
         // Convert to an array of plain objects
-        shipments = shipments.map((shipment) => shipment.toObject());
+        shipment = shipment.map((shipment) => {
+            const obj = shipment.toObject();
+            // Remove uploadedBol if showBOL is false or not set
+            if (!obj.showBOL) {
+                delete obj.uploadedBol;
+            }
+            return obj;
+        });
 
         // Fetch driver data for each shipment that has a driver_id
         await Promise.all(
