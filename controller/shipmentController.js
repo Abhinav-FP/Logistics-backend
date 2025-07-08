@@ -97,7 +97,7 @@ exports.createShipment = catchAsync(async (req, res) => {
       }
     });
     shipmentData.shipper_id = shipper_id;
-    console.log("req.file", req.file);
+    // console.log("req.file", req.file);
     const fileUrl = req?.file?.location || null;
     if (fileUrl) {
       shipmentData.uploadedBol = fileUrl;
@@ -158,7 +158,7 @@ exports.updateShipment = catchAsync(async (req, res) => {
     if (updateData?.broker_id) {
       await createNotification({
         body: {
-          senderId: shipper_id,
+          senderId: shipment?.shipper_id,
           ReciverId: shipment.carrier_id,
           SenderId: shipment.broker_id,
           ShipmentId: shipment._id,
@@ -337,6 +337,31 @@ exports.dispatchSheet = catchAsync(async (req, res) => {
   }
 });
 
+exports.showBOL = catchAsync(async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log("id",id);
+
+    if (!id) {
+      return errorResponse(res, "Shipment ID is required", 400);
+    }
+
+    const shipment = await Shipment.findByIdAndUpdate(
+      id,
+      { showBOL: true, status:"Driver Assigned" },
+      { new: true }
+    );
+
+    if (!shipment) {
+      return errorResponse(res, "Shipment not found", 404);
+    }
+
+    return successResponse(res, "BOL is now visible", 200, shipment);
+  } catch (error) {
+    return errorResponse(res, error.message || "Internal Server Error", 500);
+  }
+});
+
 exports.deleteShipment = catchAsync(async (req, res) => {
   try {
     const notificationdata = await notification.findOneAndDelete({ ShipmentId: req.params.id });
@@ -454,8 +479,16 @@ exports.getShipmentofBroker = catchAsync(async (req, res) => {
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
+    
     // Convert to an array of plain objects
-    shipment = shipment.map((shipment) => shipment.toObject());
+     shipment = shipment.map((shipment) => {
+      const obj = shipment.toObject();
+      // Remove uploadedBol if showBOL is false or not set
+      if (!obj.showBOL) {
+        delete obj.uploadedBol;
+      }
+      return obj;
+    });
 
     // Fetch driver data for each shipment that has a driver_id
     await Promise.all(
@@ -492,7 +525,15 @@ exports.getShipmentofCarrier = catchAsync(async (req, res) => {
       return errorResponse(res, "No data found", 404);
     }
     // Convert to an array of plain objects
-    shipment = shipment.map((shipment) => shipment.toObject());
+     // Convert to an array of plain objects
+     shipment = shipment.map((shipment) => {
+      const obj = shipment.toObject();
+      // Remove uploadedBol if showBOL is false or not set
+      if (!obj.showBOL) {
+        delete obj.uploadedBol;
+      }
+      return obj;
+    });
 
     // Fetch driver data for each shipment that has a driver_id
     await Promise.all(
@@ -528,8 +569,15 @@ exports.getShipmentofCustomer = catchAsync(async (req, res) => {
     if (!shipment) {
       return errorResponse(res, "No data found", 404);
     }
-    // Convert to an array of plain objects
-    shipment = shipment.map((shipment) => shipment.toObject());
+     // Convert to an array of plain objects
+     shipment = shipment.map((shipment) => {
+      const obj = shipment.toObject();
+      // Remove uploadedBol if showBOL is false or not set
+      if (!obj.showBOL) {
+        delete obj.uploadedBol;
+      }
+      return obj;
+    });
 
     // Fetch driver data for each shipment that has a driver_id
     await Promise.all(
