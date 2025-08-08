@@ -348,7 +348,7 @@ exports.showBOL = catchAsync(async (req, res) => {
 
     const shipment = await Shipment.findByIdAndUpdate(
       id,
-      { showBOL: true, status:"Driver Assigned" },
+      { showBOL: true, status:"transit" },
       { new: true }
     );
 
