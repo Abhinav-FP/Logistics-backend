@@ -117,7 +117,7 @@ exports.GetDrivers = catchAsync(async (req, res) => {
 
 exports.ShipmentGet = catchAsync(async (req, res) => {
     try {
-        const shipments = await shipment.find({ driver_id: req.user.id, status: { $ne: "delivered" }, driver_location: { $ne: "reached" } }).populate([
+        const shipments = await shipment.find({ driver_id: req.user.id, status: { $ne: "delivered" }, driver_location: { $ne: "reached"  } }).populate([
             { path: "broker_id", select: "name email" },
             { path: "shipper_id", select: "name email" },
             { path: "customer_id", select: "name email" },
@@ -554,17 +554,21 @@ exports.updateDirections = catchAsync(async (req, res) => {
 exports.DashboardDriverApi = catchAsync(async (req, res) => {
     try {
         const { user } = req;
-        const shipperId = new mongoose.Types.ObjectId(user.id);
+        const shipperId = new mongoose.Types.ObjectId("67e7b6965ba148853b84364c");
+
         let filter = {};
         if (user?.role === "driver") {
             filter = { driver_id: shipperId };
         }
+
         let statusData = {
             delivered: 0,
             pending: 0,
-            transit: 0
+            transit: 0,
         };
-        let [statusCounts, Shipment, ShipmentData] = await Promise.all([
+
+        // Get ALL data for statusCounts and Shipment (no delivery status filtering here)
+        let [statusCounts, Shipment, allShipmentData] = await Promise.all([
             shipment.aggregate([
                 { $match: filter },
                 { $group: { _id: "$status", count: { $sum: 1 } } },
@@ -580,32 +584,43 @@ exports.DashboardDriverApi = catchAsync(async (req, res) => {
                     { path: "carrier_id", select: "name email" },
                 ])
                 .sort({ created_at: -1 })
-                .limit(4),
+                .limit(10), // optional: get more for filtering below
         ]);
 
+        // Only count status if it exists in the object
         statusCounts.forEach(({ _id, count }) => {
             if (statusData.hasOwnProperty(_id)) {
                 statusData[_id] = count;
             }
         });
-        if (ShipmentData && ShipmentData.length !== 0) {
-            ShipmentData = ShipmentData.map((shipment) => shipment.toObject());
-            await Promise.all(
-                ShipmentData.map(async (shipment) => {
-                    if (shipment.driver_id) {
-                        const driverData = await Driver.findOne({
-                            driver_id_ref: shipment.driver_id._id,
-                        });
-                        if (driverData) {
-                            shipment.driver_id = {
-                                ...shipment.driver_id,
-                                ...driverData.toObject(),
-                            };
-                        }
+
+        // ✅ Apply filter only to ShipmentData (in-memory)
+        let ShipmentData = allShipmentData
+            .filter(
+                (shipment) =>
+                    shipment.status !== "delivered" ||
+                    shipment.driver_location !== "delivered"
+            )
+            .slice(0, 4) // optional: limit final result to 4
+
+        // Convert to object and add driver details
+        ShipmentData = await Promise.all(
+            ShipmentData.map(async (shipmentDoc) => {
+                const shipment = shipmentDoc.toObject();
+                if (shipment.driver_id) {
+                    const driverData = await Driver.findOne({
+                        driver_id_ref: shipment.driver_id._id,
+                    });
+                    if (driverData) {
+                        shipment.driver_id = {
+                            ...shipment.driver_id,
+                            ...driverData.toObject(),
+                        };
                     }
-                })
-            );
-        }
+                }
+                return shipment;
+            })
+        );
 
         res.json({
             status: true,
@@ -617,6 +632,8 @@ exports.DashboardDriverApi = catchAsync(async (req, res) => {
         errorResponse(res, error.message || "Failed to fetch profile", 500);
     }
 });
+
+
 
 
 
