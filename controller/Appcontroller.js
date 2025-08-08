@@ -161,7 +161,7 @@ exports.getShipmentDetilas = catchAsync(async (req, res) => {
         }
 
         // Convert to an array of plain objects
-        shipments = shipments.map((shipment) => {
+        shipment = shipment.map((shipment) => {
             const obj = shipment.toObject();
             // Remove uploadedBol if showBOL is false or not set
             if (!obj.showBOL) {
@@ -554,7 +554,7 @@ exports.updateDirections = catchAsync(async (req, res) => {
 exports.DashboardDriverApi = catchAsync(async (req, res) => {
     try {
         const { user } = req;
-        const shipperId = new mongoose.Types.ObjectId("67e7b6965ba148853b84364c");
+        const shipperId = new mongoose.Types.ObjectId(user.id);
 
         let filter = {};
         if (user?.role === "driver") {
