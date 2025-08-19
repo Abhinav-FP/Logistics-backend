@@ -161,7 +161,7 @@ exports.getShipmentDetilas = catchAsync(async (req, res) => {
         }
 
         // Convert to an array of plain objects
-        shipment = shipment.map((shipment) => {
+        shipments = shipments.map((shipment) => {
             const obj = shipment.toObject();
             // Remove uploadedBol if showBOL is false or not set
             if (!obj.showBOL) {
@@ -184,6 +184,7 @@ exports.getShipmentDetilas = catchAsync(async (req, res) => {
 
         return successResponse(res, "Shipments fetched successfully", 200, shipments);
     } catch (error) {
+        console.log("id" ,error)
         return errorResponse(res, error.message || "Internal Server Error", 500);
     }
 });
